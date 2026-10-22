@@ -96,11 +96,10 @@
     <section class="dashboard-panel">
       <h1>Claim Shifts</h1>
 
-      <!-- this div will probably have to be a form, then give in an action -->
-      <div class="filters"> 
+      <form class="filters" action ="/claim job">
         <fieldset>
           <legend>Location</legend>
-          <select>
+          <select name = "location">
             {#each locations as location}
               <option>{location.address}</option>
             {/each}
@@ -109,20 +108,19 @@
 
         <fieldset>
           <legend>Date range</legend>
-          <input type="date" value="2026-09-28" />
+          <input type="date" value="2026-09-28" name = "startDate"/>
           -
-          <input type="date" value="2026-09-30" />
+          <input type="date" value="2026-09-30" name = "endDate"/>
         </fieldset>
 
         <fieldset>
           <legend>Time of day</legend>
-          <input type="time" value="08:00" />
+          <input type="time" value="08:00" name = "startTime" />
           -
-          <input type="time" value="20:00" />
+          <input type="time" value="20:00" name = "endTime" />
         </fieldset>
 
-        <!-- type="button" will probably need to be type="submit"  -->
-        <button type="button">View Available Shifts</button>
+        <button type="submit">View Available Shifts</button>
       </div>
 
     </section>
