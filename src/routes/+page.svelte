@@ -1,5 +1,16 @@
 <script>
+  import { goto } from "$app/navigation";
 
+  let userCredential = $state("");
+  let passCredential = $state("");
+
+  function login() {
+    if (userCredential === 'manager' && passCredential === 'password') {
+      goto('/manager');
+    } else if (userCredential === 'worker' && passCredential === 'password') {
+      goto('/worker');
+    }
+  }
 </script>
 
 
@@ -7,15 +18,16 @@
   <div class = "login-form">
     <h1>Login</h1>
     <div>
-      <label for="Email">Email:</label><br>
-      <input type="text" id="Email" name="Email"><br><br>
+      <label for="username">Username:</label><br>
+      <input bind:value={userCredential} type="text" id="username" name="username"><br><br>
     </div>
     <div>
       <label for="password">Password:</label><br>
-      <input type="text" id="password" name="password"><br><br>
+      <input bind:value={passCredential} type="text" id="password" name="password"><br><br>
     </div>
 
-    <input type="button" class = "button" value="Login"> <br>
+    <!-- <input type="button" class = "button" value="Login">  -->
+    <button onclick={login} class="button"> log in </button> <br>
   </div>
 
   <!-- temp navigation -->
