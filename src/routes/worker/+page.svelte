@@ -96,7 +96,7 @@
     <section class="dashboard-panel">
       <h1>Claim Shifts</h1>
 
-      <form class="filters" action ="/claim job">
+      <form class="filters" action ="/worker/claim-job">
         <fieldset>
           <legend>Location</legend>
           <select name = "location">
@@ -121,7 +121,7 @@
         </fieldset>
 
         <button type="submit">View Available Shifts</button>
-      </div>
+      </form>
 
     </section>
   </div>
