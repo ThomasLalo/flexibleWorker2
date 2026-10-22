@@ -1,4 +1,14 @@
 <script>
+  import { page } from '$app/state';
+  import Calender from '#lib/Calender.svelte';
+
+  const loc = page.url.searchParams.get("location");
+  const sd = page.url.searchParams.get("startDate");
+  const ed = page.url.searchParams.get("endDate");
+  const st = page.url.searchParams.get("startTime");
+  const et = page.url.searchParams.get("endTime");
+
+
 
 </script>
 
@@ -6,8 +16,9 @@
 
 <main>
   <div class = "panel">
-
-    <h1>September</h1>
+  
+    <Calender location = {loc} startDate = {sd} endDate = {ed} startTime = {st} endTime = {et}/>
+    <!-- <h1>September</h1>
     <div class="calendar">
 
       <div class="label" id="Sunday">Sunday</div>
@@ -81,7 +92,7 @@
       <div class="day empty"></div>
       <div class="day empty"></div>
 
-    </div>
+    </div> -->
 
   </div>
   <div class = "panel">
@@ -115,7 +126,7 @@
     padding: 1rem;
   }
 
-  .calendar {
+  /* .calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
@@ -199,7 +210,7 @@
   .selected-shift {
     background-color: white;
     color: black;
-  }
+  } */
 
   .job-description {
     max-width: 45ch;

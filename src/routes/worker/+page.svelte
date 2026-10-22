@@ -96,7 +96,8 @@
     <section class="dashboard-panel">
       <h1>Claim Shifts</h1>
 
-      <div class="filters">
+      <!-- this div will probably have to be a form, then give in an action -->
+      <div class="filters"> 
         <fieldset>
           <legend>Location</legend>
           <select>
@@ -120,8 +121,10 @@
           <input type="time" value="20:00" />
         </fieldset>
 
+        <!-- type="button" will probably need to be type="submit"  -->
         <button type="button">View Available Shifts</button>
       </div>
+
     </section>
   </div>
 </main>
