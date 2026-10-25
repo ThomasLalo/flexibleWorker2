@@ -1,4 +1,4 @@
-type Shift = {
+export type Shift = {
   month: number;
   day: number;
   startTime: number;
