@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { locations } from '#lib/shared.svelte.ts';
   import { roster } from '#lib/shared.svelte.ts';
@@ -61,14 +62,22 @@
       : [];
   });
 
+  function claimShift() {
+    if (selectedShift !== null && !selectedShift.worker && !selectedShift.canceled) {
+      selectedShift.worker = worker;
+      goto('/worker');
+    }
+  };
+
 </script>
 
 <!-- I'm not sure where the codepen for this form ended up -->
 
 <main>
   <div class = "panel">
+    <a href="/worker">&lt;&lt;&lt; Back to dashboard</a>
     <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
-      bind:selectedDay={() => selectedDay, selectDay}/>
+      bind:selectedDay={() => selectedDay, selectDay} bind:selectedShift/>
   </div>
   <div class="panel claim-panel">
     <h2>
@@ -92,7 +101,21 @@
         {/each}
       </div>
     {:else}
-      <p>Select a calendar day to see all its matching shifts.</p>
+      <!-- <p>Select a calendar day to see all its matching shifts.</p> -->
+      <div class="day-shift-list">
+        {#each unclaimedShifts as shift (shift)}
+          <button type="button" class="shift-option"
+            class:claimed={Boolean(shift.worker)}
+            class:selected={shift === selectedShift}
+            onclick={() => selectedShift = shift}>
+            <span>{shift.startTime}:00–{shift.endTime}:00 ({shift.role})</span>
+            <span>{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
+            {#if shift.canceled}<span>Canceled</span>{/if}
+          </button>
+        {:else}
+          <p>No matching shifts on this day.</p>
+        {/each}
+      </div>
     {/if}
     {#if selectedShift}
       <p>
@@ -110,7 +133,7 @@
     <p>123 Address Dr</p>
 
     <h3>Claim 9-5 shift on September 29? </h3> -->
-    <button type="button">confirm</button>
+    <button type="button" onclick={claimShift}>confirm</button>
 
 </div>
 </main>

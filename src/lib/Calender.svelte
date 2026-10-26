@@ -9,13 +9,15 @@
         unclaimedShifts,
         startDate = new Date(),
         endDate = new Date(),
-        selectedDay = $bindable(null)
+        selectedDay = $bindable(null),
+        selectedShift = $bindable(null)
     }: {
         claimedShifts: Shift[];
         unclaimedShifts: Shift[];
         startDate?: Date;
         endDate?: Date;
         selectedDay?: CalendarDay | null;
+        selectedShift?: Shift | null;
     } = $props();
 
     const shifts = $derived([
@@ -23,10 +25,14 @@
         ...unclaimedShifts
     ]);
     
+    // reactive state variables that don't react to changes to props
+    // changes to props never happen. the docs will tell you this should be $derived because the data comes from reactive $props, but that only makes sense if props change
+    // this is me being stubborn about what making the code written in a way implies what it actually does. so I'm supressing the warnings.
     // svelte-ignore state_referenced_locally
     let year = $state(startDate.getFullYear());
     // svelte-ignore state_referenced_locally
     let month = $state(startDate.getMonth()+1); // 1-based
+
     // svelte-ignore state_referenced_locally
     const startMonth = startDate.getMonth()+1;
     // svelte-ignore state_referenced_locally
@@ -42,7 +48,7 @@
     //takes 0 based month
     let firstDayOffset = $derived(new Date(year, month - 1, 1).getDay());
     //takes 1 based month
-    let daysInMonth = $derived(new Date(year, month, 0).getDate())
+    let daysInMonth = $derived(new Date(year, month, 0).getDate());
 
     function getShiftsForDay(day: number): Shift[] {
         return shifts.filter(shift => shift.month === month && shift.day === day);
@@ -52,11 +58,34 @@
         const afterStart = month > startMonth || (month === startMonth && day >= startDay);
         const beforeEnd = month < endMonth || (month === endMonth && day <= endDay);
         return afterStart && beforeEnd;
+    };
+
+    function changeMonth(direction: string) {
+        switch(direction) {
+            case "next":
+                if (month === 12) {
+                    month = 1;
+                } else {
+                    month += 1;
+                }
+                break;
+            case "previous":
+                if (month === 1) {
+                    month = 12;
+                } else {
+                    month -= 1;
+                }
+                break;
+        }
     }
 
 </script>
 
-<h1>{monthNames[month-1]}</h1>
+<div class="month">
+    <button onclick={() => changeMonth("previous")}>&lt;</button>
+    <h1>{monthNames[month-1]}</h1>
+    <button onclick={() => changeMonth("next")}>&gt;</button>
+</div>
 <div class="calendar">
 
     <div class="label" id="Sunday">Sunday</div>
@@ -78,7 +107,7 @@
 
         <button type="button" class="day" class:in-range={isInRange(i + 1)}
             class:selected-day={isSelected}
-            onclick={() => selectedDay = { year, month, day: i + 1 }}>
+            onclick={() => selectedDay = isSelected ? null : { year, month, day: i + 1 }}>
             <span class="day-header">
                 <span>{i + 1}</span>
                 {#if dayShifts.length > 3}
@@ -87,7 +116,8 @@
             </span>
 
         {#each dayShifts.slice(0, 3) as shift (shift)}
-            <span class="shift" class:claimed={Boolean(shift.worker)}>
+            <span class="shift" class:claimed={Boolean(shift.worker)}
+                class:selected={shift === selectedShift}>
                 {shift.startTime}:00–{shift.endTime}:00
             </span>
         {/each}
@@ -101,6 +131,11 @@
 <style>
 h1 {
     color:#4D148C;
+}
+.month {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .calendar {
@@ -185,6 +220,11 @@ button.day:hover .day-header,
 .shift.claimed {
     background-color: #FF6600;
     color: black;
+}
+
+.shift.selected {
+    background-color: #2563EB;
+    color: white;
 }
 
 </style>

@@ -60,6 +60,8 @@ export const locations: Location[] = $state([
       { month: 10, day: 11, startTime: 10, endTime: 18, role: "courier", worker: "Isabella Patel" },
       { month: 10, day: 11, startTime: 12, endTime: 20, role: "courier", worker: "Ethan Brooks" },
       { month: 10, day: 11, startTime: 13, endTime: 21, role: "handler", worker: "Lucas Foster" },
+      { month: 10, day: 15, startTime: 7, endTime: 15, role: "handler", worker: "Emma Johnson" },
+
 
       // Unclaimed shifts available to book.
       { month: 9, day: 5, startTime: 8, endTime: 16, role: "handler" },
