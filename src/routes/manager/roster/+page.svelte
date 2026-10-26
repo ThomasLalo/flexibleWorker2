@@ -1,134 +1,82 @@
 <script lang="ts">
   import WarningIcon from '#lib/WarningIcon.svelte';
+  import { locations, roster, type Shift, type Worker } from '#lib/shared.svelte.ts';
 
-  type Shift = {
-    date: string;
-    time: string;
-    address: string;
-  };
-
-  type Worker = {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    locations: string[];
-    certifications: string[];
-    punctuality: number; // percent
-    attendance: number; // percent
-    shiftsCompleted: number;
-    upcoming: Shift[];
-  };
+  // a shift plus the address it belongs to, so the roster can list them per worker
+  type AssignedShift = Shift & { address: string };
 
   // below this percent a worker gets flagged with a warning icon
   const FLAG_THRESHOLD = 80;
 
-  const locationOptions = ['123 Address Dr.', '456 Oak St.', '789 Maple Ave.'];
-
-  // placeholder data until we have a backend
-  let workers: Worker[] = $state([
-    {
-      id: 1,
-      name: 'Jordan Ellis',
-      email: 'jordan.ellis@example.com',
-      phone: '(555) 201-4410',
-      locations: ['123 Address Dr.', '456 Oak St.'],
-      certifications: ['CDL', 'Forklift'],
-      punctuality: 96,
-      attendance: 92,
-      shiftsCompleted: 48,
-      upcoming: [
-        { date: '9/28', time: '9 AM - 5 PM', address: '123 Address Dr.' },
-        { date: '10/2', time: '8 AM - 2 PM', address: '456 Oak St.' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Priya Natarajan',
-      email: 'priya.n@example.com',
-      phone: '(555) 318-0092',
-      locations: ['456 Oak St.'],
-      certifications: ['Forklift', 'Hazmat'],
-      punctuality: 88,
-      attendance: 95,
-      shiftsCompleted: 31,
-      upcoming: [{ date: '10/3', time: '10 AM - 4 PM', address: '456 Oak St.' }]
-    },
-    {
-      id: 3,
-      name: 'Marcus Reed',
-      email: 'mreed@example.com',
-      phone: '(555) 774-3381',
-      locations: ['123 Address Dr.', '789 Maple Ave.'],
-      certifications: ['CDL'],
-      punctuality: 71,
-      attendance: 66,
-      shiftsCompleted: 19,
-      upcoming: []
-    },
-    {
-      id: 4,
-      name: 'Alicia Gomez',
-      email: 'alicia.gomez@example.com',
-      phone: '(555) 640-1127',
-      locations: ['789 Maple Ave.'],
-      certifications: ['First Aid'],
-      punctuality: 90,
-      attendance: 78,
-      shiftsCompleted: 24,
-      upcoming: [{ date: '10/5', time: '9 AM - 5 PM', address: '789 Maple Ave.' }]
-    },
-    {
-      id: 5,
-      name: 'Sam Whitfield',
-      email: 'sam.w@example.com',
-      phone: '(555) 902-5563',
-      locations: ['123 Address Dr.', '456 Oak St.', '789 Maple Ave.'],
-      certifications: ['CDL', 'Hazmat', 'First Aid'],
-      punctuality: 99,
-      attendance: 97,
-      shiftsCompleted: 112,
-      upcoming: [
-        { date: '9/30', time: '11 AM - 7 PM', address: '123 Address Dr.' },
-        { date: '10/1', time: '9 AM - 3 PM', address: '123 Address Dr.' },
-        { date: '10/4', time: '12 PM - 6 PM', address: '456 Oak St.' }
-      ]
-    }
-  ]);
-
   // filter + sort controls
   let search = $state('');
   let locationFilter = $state('All');
-  let certFilter = $state('All');
+  let roleFilter = $state('All');
   let sortBy: 'name' | 'punctuality' | 'attendance' = $state('name');
 
-  let selectedId: number | null = $state(null);
+  // workers don't have ids, so select by name
+  let selectedName: string | null = $state(null);
 
-  // every certification any worker has, for the dropdown
-  const certOptions = $derived([...new Set(workers.flatMap((w) => w.certifications))].sort());
+  // every shift in shared.svelte.ts, grouped by worker name
+  const shiftsByWorker = $derived.by(() => {
+    const map = new Map<string, AssignedShift[]>();
+    for (const location of locations) {
+      for (const shift of location.shifts) {
+        if (!shift.worker) continue; // unclaimed shift
+        const list = map.get(shift.worker) ?? [];
+        list.push({ ...shift, address: location.address });
+        map.set(shift.worker, list);
+      }
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => a.month - b.month || a.day - b.day || a.startTime - b.startTime);
+    }
+    return map;
+  });
+
+  function shiftsFor(w: Worker): AssignedShift[] {
+    return shiftsByWorker.get(w.name) ?? [];
+  }
+
+  // a worker "works at" a location if they have any shift there
+  function locationsFor(w: Worker): string[] {
+    return [...new Set(shiftsFor(w).map((s) => s.address))];
+  }
 
   // the list actually shown, recalculated whenever a filter changes
   const visibleWorkers = $derived.by(() => {
     const q = search.trim().toLowerCase();
-    const filtered = workers.filter(
+    const filtered = roster.filter(
       (w) =>
         (q === '' || w.name.toLowerCase().includes(q)) &&
-        (locationFilter === 'All' || w.locations.includes(locationFilter)) &&
-        (certFilter === 'All' || w.certifications.includes(certFilter))
+        (locationFilter === 'All' || locationsFor(w).includes(locationFilter)) &&
+        (roleFilter === 'All' || w.role === roleFilter)
     );
     return [...filtered].sort((a, b) =>
       sortBy === 'name' ? a.name.localeCompare(b.name) : b[sortBy] - a[sortBy]
     );
   });
 
-  const selectedWorker = $derived(workers.find((w) => w.id === selectedId) ?? null);
+  const selectedWorker = $derived(roster.find((w) => w.name === selectedName) ?? null);
+  const selectedShifts = $derived(selectedWorker ? shiftsFor(selectedWorker) : []);
 
   function isFlagged(w: Worker) {
     return w.punctuality < FLAG_THRESHOLD || w.attendance < FLAG_THRESHOLD;
   }
 
   function toggle(w: Worker) {
-    selectedId = selectedId === w.id ? null : w.id;
+    selectedName = selectedName === w.name ? null : w.name;
+  }
+
+  // 9 -> "9 AM", 14 -> "2 PM"
+  function formatHour(h: number) {
+    if (h === 0 || h === 24) return '12 AM';
+    if (h === 12) return '12 PM';
+    return h < 12 ? `${h} AM` : `${h - 12} PM`;
+  }
+
+  function capitalize(s: string) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 </script>
 
@@ -170,19 +118,18 @@
           <legend>Location</legend>
           <select bind:value={locationFilter}>
             <option value="All">All locations</option>
-            {#each locationOptions as loc}
-              <option value={loc}>{loc}</option>
+            {#each locations as location}
+              <option value={location.address}>{location.address}</option>
             {/each}
           </select>
         </fieldset>
 
         <fieldset>
-          <legend>Certification</legend>
-          <select bind:value={certFilter}>
+          <legend>Role</legend>
+          <select bind:value={roleFilter}>
             <option value="All">Any</option>
-            {#each certOptions as cert}
-              <option value={cert}>{cert}</option>
-            {/each}
+            <option value="handler">Handler</option>
+            <option value="courier">Courier</option>
           </select>
         </fieldset>
 
@@ -196,20 +143,18 @@
         </fieldset>
       </div>
 
-      <p class="count">{visibleWorkers.length} of {workers.length} workers</p>
+      <p class="count">{visibleWorkers.length} of {roster.length} workers</p>
 
-      {#each visibleWorkers as worker (worker.id)}
+      {#each visibleWorkers as worker (worker.name)}
         <button
           type="button"
-          class={['worker', isFlagged(worker) && 'flagged', worker.id === selectedId && 'selected']}
+          class={['worker', isFlagged(worker) && 'flagged', worker.name === selectedName && 'selected']}
           onclick={() => toggle(worker)}
-          aria-pressed={worker.id === selectedId}
+          aria-pressed={worker.name === selectedName}
         >
           <span class="worker-details">
             <span class="worker-name">{worker.name}</span>
-            <span class="worker-meta">
-              {worker.certifications.join(' · ')}
-            </span>
+            <span class="worker-meta">{capitalize(worker.role)}</span>
             {#if isFlagged(worker)}
               <span class="worker-status">Low reliability</span>
             {/if}
@@ -242,31 +187,39 @@
           {@render donut('Attendance', selectedWorker.attendance)}
         </div>
 
-        <p><strong>{selectedWorker.shiftsCompleted}</strong> shifts completed</p>
-
-        <h3>Certifications</h3>
+        <h3>Role &amp; certifications</h3>
         <div class="tags">
+          <span class="tag role">{capitalize(selectedWorker.role)}</span>
           {#each selectedWorker.certifications as cert}
             <span class="tag">{cert}</span>
           {/each}
         </div>
 
         <h3>Works at</h3>
-        <ul>
-          {#each selectedWorker.locations as loc}
-            <li>{loc}</li>
-          {/each}
-        </ul>
+        {#if locationsFor(selectedWorker).length > 0}
+          <ul>
+            {#each locationsFor(selectedWorker) as address}
+              <li>{address}</li>
+            {/each}
+          </ul>
+        {:else}
+          <p class="empty">Not assigned to any location yet.</p>
+        {/if}
 
-        <h3>Upcoming shifts</h3>
-        {#each selectedWorker.upcoming as shift}
-          <div class="shift">
-            <span class="shift-date">{shift.date}</span>
-            <span class="shift-time">{shift.time}</span>
+        <h3>Shifts ({selectedShifts.length})</h3>
+        {#each selectedShifts as shift}
+          <div class={['shift', shift.canceled && 'shift-canceled', shift.timeChanged && 'time-changed']}>
+            <span class="shift-date">{shift.month}/{shift.day}</span>
+            <span class="shift-time">{formatHour(shift.startTime)} - {formatHour(shift.endTime)}</span>
             <span class="shift-address">{shift.address}</span>
+            {#if shift.canceled}
+              <span class="shift-status">Canceled</span>
+            {:else if shift.timeChanged}
+              <span class="shift-status">Time Changed</span>
+            {/if}
           </div>
         {:else}
-          <p class="empty">No upcoming shifts.</p>
+          <p class="empty">No shifts assigned.</p>
         {/each}
 
         <div class="detail-actions">
@@ -474,6 +427,11 @@
     font-size: 0.9rem;
   }
 
+  .tag.role {
+    background-color: purple;
+    color: white;
+  }
+
   ul {
     margin: 0;
     padding-left: 1.25rem;
@@ -498,6 +456,24 @@
   .shift-time {
     color: purple;
     font-weight: 600;
+  }
+
+  .shift-status {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* same colors the worker dashboard uses for these states */
+  .time-changed .shift-status {
+    color: orange;
+  }
+
+  .shift-canceled .shift-status {
+    color: red;
+  }
+
+  .shift-canceled .shift-time {
+    text-decoration: line-through;
   }
 
   .detail-actions {
