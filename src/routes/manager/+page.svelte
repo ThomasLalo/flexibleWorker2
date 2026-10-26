@@ -10,7 +10,7 @@
   let st = $state('08:00');
   let et = $state('20:00');
 
-  let selectedLocation = $derived(locations.find(item => item.address === loc));
+  let selectedLocation = $derived(locations.find(item => item.address === loc))!;
 
   let startDate = $derived(new Date(sd + "T00:00"));
   let endDate = $derived(new Date(ed + "T00:00"));
@@ -28,7 +28,7 @@
       );
     }) ?? [] //typescript warning avoidance
   );
-//idk
+
 
   let selectedShift: Shift | null = $state(null);
 
@@ -41,14 +41,18 @@
   }
 
   function clickedAddJob() {
-    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et})
-    goto(`/worker/add-job${params}`);
+    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et});
+    goto(`/manager/add-job?${params}`);
   }
 
   function clickedEditJob() {
-    const indexOfSelectedShift = selectedLocation.shifts.findIndex(shift => shift === selectedShift)
-    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et, index:indexOfSelectedShift})
-    goto(`/worker/edit-job${params}`);
+    const indexOfSelectedShift = selectedLocation.shifts.findIndex(shift => shift === selectedShift).toString();
+    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et, index:indexOfSelectedShift});
+    goto(`/manager/edit-job?${params}`);
+  }
+
+  function gotoRoster() {
+    goto(`/manager/roster`)
   }
 </script>
 
@@ -87,7 +91,7 @@
         </fieldset>
       </div>
 
-      <div>
+      <div class="location-shifts">
         <h2>{selectedLocation.address}</h2>
 
         {#each shiftsInRange as shift}
@@ -112,6 +116,13 @@
           </div>
         {/each}
       </div>
+    </div>
+    <div class="location-shifts">
+      <h2>Roster<hr></h2>
+      {#each roster as worker}
+        <div class="shift">{worker.name}</div>
+      {/each}
+      <button type="button" onclick={gotoRoster}>View Full Roster</button>
     </div>
   </div>
 
