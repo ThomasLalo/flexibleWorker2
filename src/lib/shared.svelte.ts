@@ -33,7 +33,7 @@ export const locations: Location[] = $state([
       { month: 9, day: 10, startTime: 9, endTime: 17, role: "handler", worker: "Emma Johnson", canceled: true },
       { month: 9, day: 12, startTime: 12, endTime: 18, role: "courier", worker: "Noah Bennett" },
 
-      { month: 9, day: 15, startTime: 7, endTime: 15, role: "handler", worker: "Emma Johnson" },
+      { month: 9, day: 15, startTime: 7, endTime: 15, role: "handler", worker: "Emma Johnson", timeChanged: true},
       { month: 9, day: 15, startTime: 8, endTime: 16, role: "courier", worker: "Liam Carter" },
       { month: 9, day: 15, startTime: 9, endTime: 17, role: "handler", worker: "Olivia Martinez" },
       { month: 9, day: 15, startTime: 10, endTime: 18, role: "courier", worker: "Noah Bennett" },
