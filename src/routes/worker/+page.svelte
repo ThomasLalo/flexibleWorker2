@@ -1,6 +1,12 @@
 <script lang="ts">
   import WarningIcon from '#lib/WarningIcon.svelte';
+  import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
+  // currently logged in
+  let currentWorker = $state("Emma Johnson")
+  // takes the worker logged in and changes the doughnut graphs to satisfty that persons infomration
+  let workerInfo = $derived(roster.find(worker => worker.name === currentWorker));
 
+ /*
   type Shift = {
     date: string;
     time: string;
@@ -36,6 +42,7 @@
     },
     { address: "789 Maple Ave.", shifts: [] },
   ]);
+*/
 
   let selectedShift: Shift | null = $state(null);
 
@@ -62,14 +69,17 @@
           <button type="button">View Map</button>
         </header>
 
-        {#each location.shifts as shift}
+        <!-- {#each location.shifts as shift} -->
+         <!-- has the shifts that appear be based on the employee that is selected -->
+         {#each location.shifts.filter(shift => shift.worker === currentWorker) as shift}
+
           <!-- svelte does not like that I made a div act like a button, for accessibility reasons. the next comment suppresses warnings about that -->
           <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
           <div class={["shift", shift.canceled && "shift-canceled", shift.timeChanged && "time-changed", shift === selectedShift && "selected"]} onclick={() => toggle(shift)} >
 
             <div class="shift-details">
-              <span class="shift-date">{shift.date}</span>
-              <span class="shift-time">{shift.time}</span>
+              <span class="shift-date">{shift.month}/{shift.day}</span> 
+              <span class="shift-time">{shift.startTime}:00 - {shift.endTime}:00</span>
 
               {#if shift.canceled}
                 <span class="shift-status">Shift Canceled</span>
@@ -123,8 +133,46 @@
         <button type="submit">View Available Shifts</button>
       </form>
 
+      <!-- dounut circles that change based on the worker selected -->
+      <div class="donut-charts">
+    
+      <div class = "chart">
+        <h2>Punctuality </h2>
+        <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
+          <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
+          <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
+          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="{workerInfo?.punctuality  ?? 0} {100 - (workerInfo?.punctuality  ?? 0)}" stroke-dashoffset="25"></circle>
+          <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
+            {workerInfo?.punctuality  ?? 0}%
+          </text>
+        </svg>
+      </div>
+
+      <div class = "chart">
+        <h2>Attendance  </h2>
+        <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
+          <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
+          <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
+          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="{workerInfo?.attendance ?? 0} {100 - (workerInfo?.attendance ?? 0)}" stroke-dashoffset="25"></circle>
+          <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
+            {workerInfo?.attendance  ?? 0}%
+          </text>
+        </svg>
+      </div>
+
+    </div>
+
     </section>
   </div>
+
+  <!-- switch through the worker that is currently logged in -->
+  <label class ="changeWorker">
+    <select bind:value= {currentWorker}>
+      {#each roster as worker}
+      <option>{worker.name}</option>
+      {/each}
+    </select>
+  </label>
 </main>
 
 <style>
@@ -263,4 +311,23 @@
     font: inherit;
     cursor: pointer;
   }
+
+  .donut-charts {
+    flex: 1;
+    display: flex;
+    /* flex-direction: column; */
+    justify-content: space-around;
+    min-width: 0;
+  }
+
+  .chart {
+    text-align: center;
+  }
+
+  .donut {
+    width: 150px;
+    max-width: 100%;
+    height: auto;
+  }
+
 </style>
