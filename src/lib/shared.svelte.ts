@@ -1,4 +1,4 @@
-type Shift = {
+export type Shift = {
   month: number;
   day: number;
   startTime: number;
@@ -9,12 +9,12 @@ type Shift = {
   timeChanged?: boolean;
 };
 
-type Location = {
+export type Location = {
   address: string;
   shifts: Shift[];
 };
 
-type Worker = {
+export type Worker = {
   name: string;
   punctuality: number;
   attendance: number;
@@ -28,6 +28,8 @@ export const locations: Location[] = $state([
   {
     address: "123 Address Dr.",
     shifts: [
+      { month: 9, day: 1, startTime: 9, endTime: 15, role: "handler" },
+      { month: 9, day: 2, startTime: 9, endTime: 15, role: "courier" },
       { month: 9, day: 10, startTime: 9, endTime: 17, role: "handler", worker: "Emma Johnson", canceled: true },
       { month: 9, day: 12, startTime: 12, endTime: 18, role: "courier", worker: "Noah Bennett" },
 
@@ -37,6 +39,9 @@ export const locations: Location[] = $state([
       { month: 9, day: 15, startTime: 10, endTime: 18, role: "courier", worker: "Noah Bennett" },
       { month: 9, day: 15, startTime: 12, endTime: 20, role: "handler", worker: "Ava Thompson" },
       { month: 9, day: 15, startTime: 14, endTime: 22, role: "courier", worker: "Isabella Patel" },
+      
+      { month: 9, day: 17, startTime: 9, endTime: 15, role: "handler" },
+      { month: 9, day: 17, startTime: 9, endTime: 15, role: "courier" },
 
       { month: 9, day: 27, startTime: 6, endTime: 14, role: "handler", worker: "Sophia Nguyen" },
       { month: 9, day: 27, startTime: 7, endTime: 15, role: "courier", worker: "Ethan Brooks" },
@@ -55,6 +60,26 @@ export const locations: Location[] = $state([
       { month: 10, day: 11, startTime: 10, endTime: 18, role: "courier", worker: "Isabella Patel" },
       { month: 10, day: 11, startTime: 12, endTime: 20, role: "courier", worker: "Ethan Brooks" },
       { month: 10, day: 11, startTime: 13, endTime: 21, role: "handler", worker: "Lucas Foster" },
+
+      // Unclaimed shifts available to book.
+      { month: 9, day: 5, startTime: 8, endTime: 16, role: "handler" },
+      { month: 9, day: 9, startTime: 10, endTime: 18, role: "courier" },
+      { month: 9, day: 21, startTime: 9, endTime: 17, role: "handler" },
+      { month: 9, day: 28, startTime: 8, endTime: 16, role: "courier" },
+      { month: 9, day: 28, startTime: 9, endTime: 17, role: "handler" },
+      { month: 9, day: 28, startTime: 12, endTime: 20, role: "courier" },
+      { month: 9, day: 29, startTime: 8, endTime: 16, role: "handler" },
+      { month: 9, day: 29, startTime: 10, endTime: 18, role: "courier" },
+      { month: 9, day: 29, startTime: 12, endTime: 20, role: "handler" },
+      { month: 9, day: 30, startTime: 8, endTime: 16, role: "courier" },
+      { month: 9, day: 30, startTime: 9, endTime: 17, role: "handler" },
+      { month: 9, day: 30, startTime: 12, endTime: 20, role: "courier" },
+      { month: 10, day: 2, startTime: 8, endTime: 16, role: "handler" },
+      { month: 10, day: 5, startTime: 9, endTime: 17, role: "courier" },
+      { month: 10, day: 9, startTime: 10, endTime: 18, role: "handler" },
+      { month: 10, day: 15, startTime: 8, endTime: 16, role: "courier" },
+      { month: 10, day: 23, startTime: 12, endTime: 20, role: "handler" },
+      { month: 10, day: 30, startTime: 9, endTime: 17, role: "courier" },
     ],
   },
   {
@@ -89,9 +114,52 @@ export const locations: Location[] = $state([
       { month: 10, day: 18, startTime: 13, endTime: 21, role: "courier", worker: "Noah Bennett" },
 
       { month: 10, day: 20, startTime: 9, endTime: 17, role: "courier", worker: "Mason Reed", timeChanged: true },
+
+      // Unclaimed shifts available to book.
+      { month: 9, day: 4, startTime: 7, endTime: 15, role: "handler" },
+      { month: 9, day: 11, startTime: 9, endTime: 17, role: "courier" },
+      { month: 9, day: 24, startTime: 10, endTime: 18, role: "handler" },
+      { month: 9, day: 28, startTime: 8, endTime: 16, role: "courier" },
+      { month: 9, day: 28, startTime: 10, endTime: 18, role: "handler" },
+      { month: 9, day: 28, startTime: 12, endTime: 20, role: "courier" },
+      { month: 9, day: 29, startTime: 8, endTime: 16, role: "handler" },
+      { month: 9, day: 29, startTime: 9, endTime: 17, role: "courier" },
+      { month: 9, day: 29, startTime: 12, endTime: 20, role: "handler" },
+      { month: 9, day: 30, startTime: 8, endTime: 16, role: "courier" },
+      { month: 9, day: 30, startTime: 10, endTime: 18, role: "handler" },
+      { month: 9, day: 30, startTime: 12, endTime: 20, role: "courier" },
+      { month: 10, day: 1, startTime: 9, endTime: 17, role: "handler" },
+      { month: 10, day: 6, startTime: 8, endTime: 16, role: "courier" },
+      { month: 10, day: 10, startTime: 10, endTime: 18, role: "handler" },
+      { month: 10, day: 16, startTime: 12, endTime: 20, role: "courier" },
+      { month: 10, day: 24, startTime: 7, endTime: 15, role: "handler" },
+      { month: 10, day: 31, startTime: 9, endTime: 17, role: "courier" },
     ],
   },
-  { address: "789 Maple Ave.", shifts: [] },
+  {
+    address: "789 Maple Ave.",
+    shifts: [
+      // Unclaimed shifts available to book.
+      { month: 9, day: 3, startTime: 8, endTime: 16, role: "handler" },
+      { month: 9, day: 14, startTime: 9, endTime: 17, role: "courier" },
+      { month: 9, day: 25, startTime: 12, endTime: 20, role: "handler" },
+      { month: 9, day: 28, startTime: 8, endTime: 16, role: "courier" },
+      { month: 9, day: 28, startTime: 9, endTime: 17, role: "handler" },
+      { month: 9, day: 28, startTime: 12, endTime: 20, role: "courier" },
+      { month: 9, day: 29, startTime: 8, endTime: 16, role: "handler" },
+      { month: 9, day: 29, startTime: 10, endTime: 18, role: "courier" },
+      { month: 9, day: 29, startTime: 12, endTime: 20, role: "handler" },
+      { month: 9, day: 30, startTime: 8, endTime: 16, role: "courier" },
+      { month: 9, day: 30, startTime: 9, endTime: 17, role: "handler" },
+      { month: 9, day: 30, startTime: 12, endTime: 20, role: "courier" },
+      { month: 10, day: 3, startTime: 8, endTime: 16, role: "handler" },
+      { month: 10, day: 7, startTime: 10, endTime: 18, role: "courier" },
+      { month: 10, day: 13, startTime: 9, endTime: 17, role: "handler" },
+      { month: 10, day: 19, startTime: 12, endTime: 20, role: "courier" },
+      { month: 10, day: 25, startTime: 6, endTime: 14, role: "handler" },
+      { month: 10, day: 29, startTime: 14, endTime: 22, role: "courier" },
+    ],
+  },
 ])
 
 

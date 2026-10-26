@@ -1,14 +1,65 @@
-<script>
+<script lang="ts">
   import { page } from '$app/state';
-  import Calender from '#lib/Calender.svelte';
+  import { locations } from '#lib/shared.svelte.ts';
+  import { roster } from '#lib/shared.svelte.ts';
+  import type { Shift } from '#lib/shared.svelte.ts';
+  import Calender, { type CalendarDay } from '#lib/Calender.svelte';
 
+  let selectedDay = $state<CalendarDay | null>(null);
+  let selectedShift = $state<Shift | null>(null);
+
+  function selectDay(day: CalendarDay | null) {
+    selectedDay = day;
+    selectedShift = null;
+  }
+  const worker = "Emma Johnson";
+  const role = $derived(
+    roster.find(person => person.name === worker)?.role
+  );
+  
   const loc = page.url.searchParams.get("location");
-  const sd = page.url.searchParams.get("startDate");
-  const ed = page.url.searchParams.get("endDate");
-  const st = page.url.searchParams.get("startTime");
-  const et = page.url.searchParams.get("endTime");
+  const sd = page.url.searchParams.get("startDate")!;
+  const ed = page.url.searchParams.get("endDate")!;
+  const st = page.url.searchParams.get("startTime")!;
+  const et = page.url.searchParams.get("endTime")!;
+  const selectedLocation = locations.find(item => item.address === loc);
 
+  const startDate = new Date(sd + "T00:00");
+  const endDate = new Date(ed + "T00:00");
+  const startHour = parseInt(st);
+  const endHour = parseInt(et);
 
+  const shiftsInRange: Shift[] = $derived(
+    selectedLocation?.shifts.filter(shift => {
+      const date = new Date(startDate.getFullYear(), shift.month - 1, shift.day);
+      return (
+        date >= startDate &&
+        date <= endDate &&
+        shift.startTime >= startHour &&
+        shift.endTime <= endHour &&
+        shift.role == role
+      );
+    }) ?? [] //typescript warning avoidance
+  );
+
+  const unclaimedShifts = $derived(
+    shiftsInRange.filter(shift => !shift.worker && !shift.canceled)
+  );
+
+  const claimedShifts = $derived(
+    selectedLocation?.shifts.filter(
+      shift => shift.worker === worker
+    ) ?? []
+  );
+
+  const shiftsForSelectedDay = $derived.by(() => {
+    const day = selectedDay;
+    return day
+      ? [...claimedShifts, ...unclaimedShifts].filter(
+          shift => shift.month === day.month && shift.day === day.day
+        )
+      : [];
+  });
 
 </script>
 
@@ -16,96 +67,49 @@
 
 <main>
   <div class = "panel">
-  
-    <Calender location = {loc} startDate = {sd} endDate = {ed} startTime = {st} endTime = {et}/>
-    <!-- <h1>September</h1>
-    <div class="calendar">
-
-      <div class="label" id="Sunday">Sunday</div>
-      <div class="label" id="Monday">Monday</div>
-      <div class="label" id="Tuesday">Tuesday</div>
-      <div class="label" id="Wednesday">Wednesday</div>
-      <div class="label" id="Thursday">Thursday</div>
-      <div class="label" id="Friday">Friday</div>
-      <div class="label" id="Saturday">Saturday</div>
-
-      <div class="day empty"></div>
-      <div class="day empty"></div>
-
-      <div class="day">1</div>
-      <div class="day">2</div>
-      <div class="day">3</div>
-      <div class="day">4</div>
-      <div class="day">5</div>
-      <div class="day">6</div>
-      <div class="day">7</div>
-      <div class="day">8</div>
-      <div class="day">
-        9
-        <div class="shift">
-          9:00-5:00
-          <span class="shift-tooltip">I will make this display the job details nicely later</span>
-        </div>
-      </div>
-      <div class="day">10</div>
-      <div class="day">11</div>
-      <div class="day">12</div>
-      <div class="day">13
-        <div class="shift">
-          9:00-5:00
-          <span class="shift-tooltip">I will make this display the job details nicely later</span>
-        </div>
-      </div>
-      <div class="day">14</div>
-      <div class="day">15</div>
-      <div class="day">16</div>
-      <div class="day">17</div>
-      <div class="day">18</div>
-      <div class="day">19</div>
-      <div class="day">20</div>
-      <div class="day">21</div>
-      <div class="day">22</div>
-      <div class="day">23
-        <div class="shift">
-          9:00-5:00
-          <span class="shift-tooltip">I will make this display the job details nicely later</span>
-        </div>
-      </div>
-      <div class="day">24</div>
-      <div class="day">25</div>
-      <div class="day">26</div>
-      <div class="day">27</div>
-      <div class="day">28</div>
-      <div class="day selected-day">29
-        <div class="shift selected-shift">
-          9:00-5:00
-          <span class="shift-tooltip">I will make this display the job details nicely later</span>
-        </div>
-        <div class="shift">
-          6:00-12:00
-          <span class="shift-tooltip">I will make this display the job details nicely later</span>
-        </div>
-      </div>
-      <div class="day">30</div>
-
-      <div class="day empty"></div>
-      <div class="day empty"></div>
-      <div class="day empty"></div>
-
-    </div> -->
-
+    <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
+      bind:selectedDay={() => selectedDay, selectDay}/>
   </div>
-  <div class = "panel">
+  <div class="panel claim-panel">
+    <h2>
+      {selectedDay
+        ? `Shifts for ${selectedDay.month}/${selectedDay.day}/${selectedDay.year}`
+        : 'Select a day'}
+    </h2>
+    {#if selectedDay}
+      <div class="day-shift-list">
+        {#each shiftsForSelectedDay as shift (shift)}
+          <button type="button" class="shift-option"
+            class:claimed={Boolean(shift.worker)}
+            class:selected={shift === selectedShift}
+            onclick={() => selectedShift = shift}>
+            <span>{shift.startTime}:00–{shift.endTime}:00 ({shift.role})</span>
+            <span>{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
+            {#if shift.canceled}<span>Canceled</span>{/if}
+          </button>
+        {:else}
+          <p>No matching shifts on this day.</p>
+        {/each}
+      </div>
+    {:else}
+      <p>Select a calendar day to see all its matching shifts.</p>
+    {/if}
+    {#if selectedShift}
+      <p>
+        Selected: {selectedShift.month}/{selectedShift.day},
+        {selectedShift.startTime}:00–{selectedShift.endTime}:00
+      </p>
+    {/if}
     <h1>Claim Shift</h1>
 
-    <h3>Job description: </h3>
+    <!-- <h3>Job description: </h3>
     <p class="job-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget dignissim eros. Quisque magna dolor, rhoncus in lacinia in, volutpat in sem. Suspendisse iaculis pretium felis quis consequat. Cras eget condimentum neque, non molestie nulla. Vivamus vitae luctus magna.</p>
     <h3>Requirements: </h3>
     <p>CDL</p>
     <h3>Location: </h3>
     <p>123 Address Dr</p>
 
-    <h3>Claim 9-5 shift on September 29? </h3>
+    <h3>Claim 9-5 shift on September 29? </h3> -->
     <button type="button">confirm</button>
 
 </div>
@@ -124,6 +128,36 @@
 
   .panel {
     padding: 1rem;
+  }
+
+  .day-shift-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .shift-option {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid #4D148C;
+    border-radius: 4px;
+    background-color: #CCCCCC;
+    color: black;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .shift-option.claimed {
+    background-color: #FF6600;
+  }
+
+  .shift-option.selected {
+    background-color: #333333;
+    color: white;
+    outline: 2px solid #4D148C;
   }
 
   /* .calendar {
