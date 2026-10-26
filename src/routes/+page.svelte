@@ -21,7 +21,7 @@
   <!-- temp navigation -->
   <a href="/worker">Go to worker dashboard</a> <br/>
   <a href="/manager">Go to manager dashboard</a>
-  
+  <a href="/manager/roster">Go to manager roster</a>
 </main>
 
 <style>
