@@ -1,4 +1,5 @@
 <script>
+  import { resolve } from '$app/paths';
 
 </script>
 
@@ -19,9 +20,9 @@
   </div>
 
   <!-- temp navigation -->
-  <a href="/worker">Go to worker dashboard</a> <br/>
-  <a href="/manager">Go to manager dashboard</a>
-  
+  <a href={resolve('/worker')}>Go to worker dashboard</a> <br/>
+  <a href={resolve('/manager')}>Go to manager dashboard</a>
+  <a href={resolve('/manager/roster')}>Go to manager roster</a>
 </main>
 
 <style>

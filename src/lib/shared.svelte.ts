@@ -18,7 +18,10 @@ export type Worker = {
   name: string;
   punctuality: number;
   attendance: number;
-  role: string;
+  role: string; // handler or courier
+  email: string;
+  phone: string;
+  certifications: string[];
 }
 
 // the whole array is a state variable
@@ -34,7 +37,8 @@ export const locations: Location[] = $state([
       { month: 9, day: 9, startTime: 10, endTime: 18, role: "courier" },
       { month: 9, day: 10, startTime: 9, endTime: 17, role: "handler", worker: "Emma Johnson", canceled: true },
       { month: 9, day: 12, startTime: 12, endTime: 18, role: "courier", worker: "Noah Bennett" },
-      { month: 9, day: 15, startTime: 7, endTime: 15, role: "handler", worker: "Emma Johnson" },
+
+      { month: 9, day: 15, startTime: 7, endTime: 15, role: "handler", worker: "Emma Johnson", timeChanged: true},
       { month: 9, day: 15, startTime: 8, endTime: 16, role: "courier", worker: "Liam Carter" },
       { month: 9, day: 15, startTime: 9, endTime: 17, role: "handler", worker: "Olivia Martinez" },
       { month: 9, day: 15, startTime: 10, endTime: 18, role: "courier", worker: "Noah Bennett" },
@@ -150,14 +154,24 @@ export const locations: Location[] = $state([
 
 
 export const roster: Worker[] = $state([
-  { name: "Emma Johnson", punctuality: 92, attendance: 97, role: "handler" },
-  { name: "Liam Carter", punctuality: 78, attendance: 85, role: "courier" },
-  { name: "Olivia Martinez", punctuality: 88, attendance: 94, role: "handler" },
-  { name: "Noah Bennett", punctuality: 65, attendance: 72, role: "courier" },
-  { name: "Ava Thompson", punctuality: 97, attendance: 99, role: "handler" },
-  { name: "Ethan Brooks", punctuality: 81, attendance: 76, role: "courier" },
-  { name: "Sophia Nguyen", punctuality: 90, attendance: 91, role: "handler" },
-  { name: "Mason Reed", punctuality: 59, attendance: 68, role: "courier" },
-  { name: "Isabella Patel", punctuality: 84, attendance: 89, role: "courier" },
-  { name: "Lucas Foster", punctuality: 73, attendance: 80, role: "handler" },
+  { name: "Emma Johnson", punctuality: 92, attendance: 97, role: "handler",
+    email: "emma.johnson@example.com", phone: "(555) 201-4410", certifications: ["Forklift", "First Aid"] },
+  { name: "Liam Carter", punctuality: 78, attendance: 85, role: "courier",
+    email: "liam.carter@example.com", phone: "(555) 318-0092", certifications: ["CDL"] },
+  { name: "Olivia Martinez", punctuality: 88, attendance: 94, role: "handler",
+    email: "olivia.martinez@example.com", phone: "(555) 774-3381", certifications: ["Forklift", "Hazmat"] },
+  { name: "Noah Bennett", punctuality: 65, attendance: 72, role: "courier",
+    email: "noah.bennett@example.com", phone: "(555) 640-1127", certifications: ["CDL"] },
+  { name: "Ava Thompson", punctuality: 97, attendance: 99, role: "handler",
+    email: "ava.thompson@example.com", phone: "(555) 902-5563", certifications: ["Forklift", "Hazmat", "First Aid"] },
+  { name: "Ethan Brooks", punctuality: 81, attendance: 76, role: "courier",
+    email: "ethan.brooks@example.com", phone: "(555) 415-2238", certifications: ["CDL", "Hazmat"] },
+  { name: "Sophia Nguyen", punctuality: 90, attendance: 91, role: "handler",
+    email: "sophia.nguyen@example.com", phone: "(555) 287-6604", certifications: ["Forklift"] },
+  { name: "Mason Reed", punctuality: 59, attendance: 68, role: "courier",
+    email: "mason.reed@example.com", phone: "(555) 539-7712", certifications: ["CDL"] },
+  { name: "Isabella Patel", punctuality: 84, attendance: 89, role: "courier",
+    email: "isabella.patel@example.com", phone: "(555) 863-0459", certifications: ["CDL", "First Aid"] },
+  { name: "Lucas Foster", punctuality: 73, attendance: 80, role: "handler",
+    email: "lucas.foster@example.com", phone: "(555) 126-9381", certifications: ["Forklift"] },
 ]);

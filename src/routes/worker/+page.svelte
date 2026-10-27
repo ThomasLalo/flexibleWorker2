@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
   // currently logged in
@@ -6,43 +7,6 @@
   // takes the worker logged in and changes the doughnut graphs to satisfty that persons infomration
   let workerInfo = $derived(roster.find(worker => worker.name === currentWorker));
 
- /*
-  type Shift = {
-    date: string;
-    time: string;
-    canceled?: boolean;
-    timeChanged?: boolean;
-  };
-
-  type Location = {
-    address: string;
-    shifts: Shift[];
-  };
-
-  // the whole array is a state variable
-  // so whenever any values get changed the whole page would be re-rendered
-  let locations: Location[] = $state([
-    {
-      address: "123 Address Dr.",
-      shifts: [
-        { date: "9/28", time: "9 AM - 5 PM" },
-        { date: "9/29", time: "8 AM - 4 PM", canceled: true },
-        { date: "9/30", time: "11 AM - 7 PM", timeChanged: true },
-        { date: "10/1", time: "9 AM - 3 PM" },
-      ],
-    },
-    {
-      address: "456 Oak St.",
-      shifts: [
-        { date: "10/2", time: "8 AM - 2 PM" },
-        { date: "10/3", time: "10 AM - 4 PM" },
-        { date: "10/4", time: "12 PM - 6 PM" },
-        { date: "10/5", time: "9 AM - 5 PM" },
-      ],
-    },
-    { address: "789 Maple Ave.", shifts: [] },
-  ]);
-*/
 
   let selectedShift: Shift | null = $state(null);
 
@@ -54,10 +18,19 @@
     selectedShift = shift;
   }
 
+  function removeShift(shift: Shift){
+    delete shift.worker;
+    selectedShift = null; 
+  }
+
 </script>
 
 <main>
+<div class = "panel">
+    <a href={resolve('/')}>&lt;&lt;&lt; Back to login</a>
+  </div>
   <h1 class="dashboard-title">Employee Dashboard <hr /></h1>
+
 
   <div class="dashboard-columns">
     <section class="dashboard-panel">
@@ -95,7 +68,7 @@
                 <WarningIcon />
               {/if}
               {#if shift === selectedShift}
-                <button type="button">Remove Shift</button>
+                <button type="button" onclick={(event) => {event.stopPropagation(); shift.canceled = true }}> Remove Shift</button>
               {/if}
             </div>
           </div>
@@ -106,7 +79,7 @@
     <section class="dashboard-panel">
       <h1>Claim Shifts</h1>
 
-      <form class="filters" action ="/worker/claim-job">
+      <form class="filters" action ={resolve('/worker/claim-job')}>
         <fieldset>
           <legend>Location</legend>
           <select name = "location">
@@ -180,6 +153,10 @@
     max-width: 1200px;
     margin-inline: auto;
     font-family: sans-serif;
+  }
+
+  .panel{
+    padding: 1rem;
   }
 
   h1 {
