@@ -2,6 +2,7 @@
   import WarningIcon from '#lib/WarningIcon.svelte';
   import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
 
 
   let loc = $state('123 Address Dr.');
@@ -42,13 +43,13 @@
 
   function clickedAddJob() {
     const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et});
-    goto(`/manager/add-job?${params}`);
+    goto(`${resolve('/manager/add-job')}?${params}`);
   }
 
   function clickedEditJob() {
     const indexOfSelectedShift = selectedLocation.shifts.findIndex(shift => shift === selectedShift).toString();
     const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et, index:indexOfSelectedShift});
-    goto(`/manager/edit-job?${params}`);
+    goto(`${resolve('/manager/edit-job')}?${params}`);
   }
 
   function gotoRoster() {

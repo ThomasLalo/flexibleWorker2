@@ -1,30 +1,53 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { locations } from '#lib/shared.svelte.ts';
-  import { roster } from '#lib/shared.svelte.ts';
   import type { Shift } from '#lib/shared.svelte.ts';
   import Calender, { type CalendarDay } from '#lib/Calender.svelte';
+  import { resolve } from '$app/paths';
+
 
   let selectedDay = $state<CalendarDay | null>(null);
   let selectedShift = $state<Shift | null>(null);
+  let newDate = $state("");
+  let newStartTime = $state("");
+  let newEndTime = $state("");
+  let newRole = $state("handler");
+  let error = $state("");
 
   function selectDay(day: CalendarDay | null) {
     selectedDay = day;
     selectedShift = null;
+    if (day) {
+      newDate = `${day.year}-${String(day.month).padStart(2, '0')}-${String(day.day).padStart(2, '0')}`;
+    }
   }
-  // const worker = "Emma Johnson";
-  // const role = $derived(
-  //   roster.find(person => person.name === worker)?.role
-  // );
-  
-  const loc = page.url.searchParams.get("location");
-  // more or less typing the value to be preset input or empty string. avoids TS/svelte compiler warnings
-  let sd = $state(page.url.searchParams.get("startDate") ?? "");
-  let ed = $state(page.url.searchParams.get("endDate") ?? "");
-  let st = $state(page.url.searchParams.get("startTime") ?? "");
-  let et = $state(page.url.searchParams.get("endTime") ?? "");
-  const selectedLocation = locations.find(item => item.address === loc);
+
+  // Initialize in a way that doesn't read URL data immediately
+  let loc = $state<string | null>(null);
+  let sd = $state("");
+  let ed = $state("");
+  let st = $state("");
+  let et = $state("");
+
+  // Read the URL in the browser, after the page mounts
+  onMount(() => {
+    const params = page.url.searchParams;
+    loc = params.get("location");
+    sd = params.get("startDate") ?? "";
+    ed = params.get("endDate") ?? "";
+    st = params.get("startTime") ?? "";
+    et = params.get("endTime") ?? "";
+    newDate = sd;
+    newStartTime = st || "09:00";
+    newEndTime = et || "17:00";
+    if (!locations.some(item => item.address === loc)) {
+      error = "Choose a location on the manager dashboard before adding a shift.";
+    }
+  });
+
+  const selectedLocation = $derived(locations.find(item => item.address === loc));
 
   // new Date("" + "T00:00") would cause an error
   let startDate = $derived(sd ? new Date(sd + "T00:00") : null);
@@ -64,8 +87,42 @@
       : [];
   });
 
-  function addShift() {
-    return;
+  function addShift(event: SubmitEvent) {
+    event.preventDefault();
+    error = "";
+    if (!selectedLocation) {
+      error = "Choose a location on the manager dashboard before adding a shift.";
+      return;
+    }
+
+    const date = new Date(newDate + "T00:00");
+    const start = Number(newStartTime.split(':')[0]);
+    const end = Number(newEndTime.split(':')[0]);
+    if (!newDate || Number.isNaN(date.getTime()) ||
+        !/^\d{2}:00$/.test(newStartTime) || !/^\d{2}:00$/.test(newEndTime) ||
+        start < 0 || end > 23 || start >= end) {
+      error = "Choose a date and whole-hour times, with the end after the start.";
+      return;
+    }
+    if (newRole !== "handler" && newRole !== "courier") {
+      error = "Choose a handler or courier role.";
+      return;
+    }
+
+    selectedLocation.shifts.push({
+      month: date.getMonth() + 1,
+      day: date.getDate(),
+      startTime: start,
+      endTime: end,
+      role: newRole
+    });
+    selectedLocation.shifts.sort((a, b) =>
+      a.month - b.month ||
+      a.day - b.day ||
+      a.startTime - b.startTime ||
+      a.endTime - b.endTime
+    );
+    goto(resolve('/manager'));
   }
 
   function clearFilters() {
@@ -79,7 +136,7 @@
 
 <main>
   <div class = "panel">
-    <a href="/manager">&lt;&lt;&lt; Back to dashboard</a>
+    <a href={resolve("/manager")}>&lt;&lt;&lt; Back to dashboard</a>
     <fieldset>
       <legend>Date Range</legend>
       <input type="date" bind:value={sd} />
@@ -149,15 +206,22 @@
     {/if}
     <h1>Add Shift</h1>
 
-    <!-- <h3>Job description: </h3>
-    <p class="job-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget dignissim eros. Quisque magna dolor, rhoncus in lacinia in, volutpat in sem. Suspendisse iaculis pretium felis quis consequat. Cras eget condimentum neque, non molestie nulla. Vivamus vitae luctus magna.</p>
-    <h3>Requirements: </h3>
-    <p>CDL</p>
-    <h3>Location: </h3>
-    <p>123 Address Dr</p>
-
-    <h3>Claim 9-5 shift on September 29? </h3> -->
-    <button type="button" onclick={addShift}>confirm</button>
+    {#if error}<p role="alert">{error}</p>{/if}
+    {#if selectedLocation}
+      <p>Location: {selectedLocation.address}</p>
+      <form class="add-form" onsubmit={addShift}>
+        <label>Date <input type="date" bind:value={newDate} required /></label>
+        <label>Start time <input type="time" bind:value={newStartTime} step="3600" required /></label>
+        <label>End time <input type="time" bind:value={newEndTime} step="3600" required /></label>
+        <label>Role
+          <select bind:value={newRole}>
+            <option value="handler">Handler</option>
+            <option value="courier">Courier</option>
+          </select>
+        </label>
+        <button type="submit">Add shift</button>
+      </form>
+    {/if}
 
 </div>
 </main>
@@ -175,6 +239,13 @@
 
   .panel {
     padding: 1rem;
+  }
+
+  .add-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
   .day-shift-list {

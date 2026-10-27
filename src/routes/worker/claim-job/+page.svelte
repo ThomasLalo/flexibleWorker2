@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
@@ -19,26 +20,38 @@
     roster.find(person => person.name === worker)?.role
   );
   
-  const loc = page.url.searchParams.get("location");
-  const sd = page.url.searchParams.get("startDate")!;
-  const ed = page.url.searchParams.get("endDate")!;
-  const st = page.url.searchParams.get("startTime")!;
-  const et = page.url.searchParams.get("endTime")!;
-  const selectedLocation = locations.find(item => item.address === loc);
+  let loc = $state<string | null>(null);
+  let sd = $state("");
+  let ed = $state("");
+  let st = $state("");
+  let et = $state("");
 
-  const startDate = new Date(sd + "T00:00");
-  const endDate = new Date(ed + "T00:00");
-  const startHour = parseInt(st);
-  const endHour = parseInt(et);
+  // Read the URL in the browser, after the page mounts.
+  onMount(() => {
+    const params = page.url.searchParams;
+    loc = params.get("location");
+    sd = params.get("startDate") ?? "";
+    ed = params.get("endDate") ?? "";
+    st = params.get("startTime") ?? "";
+    et = params.get("endTime") ?? "";
+  });
+
+  const selectedLocation = $derived(locations.find(item => item.address === loc));
+
+  const startDate = $derived(sd ? new Date(sd + "T00:00") : null);
+  const endDate = $derived(ed ? new Date(ed + "T00:00") : null);
+  const startHour = $derived(st ? parseInt(st) : null);
+  const endHour = $derived(et ? parseInt(et) : null);
 
   const shiftsInRange: Shift[] = $derived(
     selectedLocation?.shifts.filter(shift => {
-      const date = new Date(startDate.getFullYear(), shift.month - 1, shift.day);
+      const year = startDate?.getFullYear() ?? endDate?.getFullYear() ?? new Date().getFullYear();
+      const date = new Date(year, shift.month - 1, shift.day);
       return (
-        date >= startDate &&
-        date <= endDate &&
-        shift.startTime >= startHour &&
-        shift.endTime <= endHour &&
+        (!startDate || date >= startDate) &&
+        (!endDate || date <= endDate) &&
+        (startHour === null || shift.startTime >= startHour) &&
+        (endHour === null || shift.endTime <= endHour) &&
         shift.role == role
       );
     }) ?? [] //typescript warning avoidance
@@ -49,9 +62,9 @@
   );
 
   const claimedShifts = $derived(
-    selectedLocation?.shifts.filter(
+    shiftsInRange.filter(
       shift => shift.worker === worker
-    ) ?? []
+    )
   );
 
   const shiftsForSelectedDay = $derived.by(() => {
@@ -70,6 +83,11 @@
     }
   };
 
+  function clearFilters() {
+    sd = ed = st = et = "";
+    selectDay(null);
+  }
+
 </script>
 
 <!-- I'm not sure where the codepen for this form ended up -->
@@ -77,6 +95,22 @@
 <main>
   <div class = "panel">
     <a href={resolve('/worker')}>&lt;&lt;&lt; Back to dashboard</a>
+    <fieldset>
+      <legend>Date Range</legend>
+      <input type="date" aria-label="Start date" bind:value={sd} onchange={() => selectDay(null)} />
+      -
+      <input type="date" aria-label="End date" bind:value={ed} onchange={() => selectDay(null)} />
+    </fieldset>
+
+    <fieldset>
+      <legend>Time Range</legend>
+      <input type="time" aria-label="Start time" bind:value={st} onchange={() => selectDay(null)} />
+      -
+      <input type="time" aria-label="End time" bind:value={et} onchange={() => selectDay(null)} />
+    </fieldset>
+
+    <button type="button" onclick={clearFilters}>Clear filters</button>
+
     <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
       bind:selectedDay={() => selectedDay, selectDay} bind:selectedShift/>
   </div>
@@ -84,7 +118,7 @@
     <h2>
       {selectedDay
         ? `Shifts for ${selectedDay.month}/${selectedDay.day}/${selectedDay.year}`
-        : 'Select a day'}
+        : 'Shifts in range'}
     </h2>
     {#if selectedDay}
       <div class="day-shift-list">
