@@ -17,6 +17,11 @@
     selectedShift = shift;
   }
 
+  function removeShift(shift: Shift){
+    delete shift.worker;
+    selectedShift = null; 
+  }
+
 </script>
 
 <main>
@@ -62,7 +67,7 @@
                 <WarningIcon />
               {/if}
               {#if shift === selectedShift}
-                <button type="button">Remove Shift</button>
+                <button type="button" onclick={() => { removeShift(shift); }}> Remove Shift</button>
               {/if}
             </div>
           </div>
