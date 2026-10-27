@@ -67,7 +67,7 @@
                 <WarningIcon />
               {/if}
               {#if shift === selectedShift}
-                <button type="button" onclick={() => { removeShift(shift); }}> Remove Shift</button>
+                <button type="button" onclick={(event) => {event.stopPropagation(); shift.canceled = true }}> Remove Shift</button>
               {/if}
             </div>
           </div>
