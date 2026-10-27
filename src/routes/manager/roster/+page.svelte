@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import { locations, roster, type Shift, type Worker } from '#lib/shared.svelte.ts';
 
@@ -104,7 +105,7 @@
 
 <main>
   <h1 class="page-title">Roster <hr /></h1>
-  <a class="back-link" href="/manager">&larr; Back to dashboard</a>
+  <a class="back-link" href={resolve('/manager')}>&larr; Back to dashboard</a>
 
   <div class="main-layout">
     <section class="roster-panel">

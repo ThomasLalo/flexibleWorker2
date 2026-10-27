@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { page } from '$app/state';
   import { locations } from '#lib/shared.svelte.ts';
   import { roster } from '#lib/shared.svelte.ts';
@@ -65,7 +66,7 @@
   function claimShift() {
     if (selectedShift !== null && !selectedShift.worker && !selectedShift.canceled) {
       selectedShift.worker = worker;
-      goto('/worker');
+      goto(resolve('/worker'));
     }
   };
 
@@ -75,7 +76,7 @@
 
 <main>
   <div class = "panel">
-    <a href="/worker">&lt;&lt;&lt; Back to dashboard</a>
+    <a href={resolve('/worker')}>&lt;&lt;&lt; Back to dashboard</a>
     <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
       bind:selectedDay={() => selectedDay, selectDay} bind:selectedShift/>
   </div>

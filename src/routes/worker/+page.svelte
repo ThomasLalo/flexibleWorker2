@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
   // currently logged in
@@ -26,7 +27,7 @@
 
 <main>
 <div class = "panel">
-    <a href="/">&lt;&lt;&lt; Back to login</a>
+    <a href={resolve('/')}>&lt;&lt;&lt; Back to login</a>
   </div>
   <h1 class="dashboard-title">Employee Dashboard <hr /></h1>
 
@@ -78,7 +79,7 @@
     <section class="dashboard-panel">
       <h1>Claim Shifts</h1>
 
-      <form class="filters" action ="/worker/claim-job">
+      <form class="filters" action ={resolve('/worker/claim-job')}>
         <fieldset>
           <legend>Location</legend>
           <select name = "location">
