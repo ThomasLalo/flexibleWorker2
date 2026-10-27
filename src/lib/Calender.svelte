@@ -7,15 +7,15 @@
     let {
         claimedShifts,
         unclaimedShifts,
-        startDate = new Date(),
-        endDate = new Date(),
+        startDate = null,
+        endDate = null,
         selectedDay = $bindable(null),
         selectedShift = $bindable(null)
     }: {
         claimedShifts: Shift[];
         unclaimedShifts: Shift[];
-        startDate?: Date;
-        endDate?: Date;
+        startDate?: Date| null;
+        endDate?: Date| null;
         selectedDay?: CalendarDay | null;
         selectedShift?: Shift | null;
     } = $props();
@@ -25,22 +25,19 @@
         ...unclaimedShifts
     ]);
     
-    // reactive state variables that don't react to changes to props
-    // changes to props never happen. the docs will tell you this should be $derived because the data comes from reactive $props, but that only makes sense if props change
-    // this is me being stubborn about what making the code written in a way implies what it actually does. so I'm supressing the warnings.
-    // svelte-ignore state_referenced_locally
-    let year = $state(startDate.getFullYear());
-    // svelte-ignore state_referenced_locally
-    let month = $state(startDate.getMonth()+1); // 1-based
 
-    // svelte-ignore state_referenced_locally
-    const startMonth = startDate.getMonth()+1;
-    // svelte-ignore state_referenced_locally
-    const startDay = startDate.getDate();
-    // svelte-ignore state_referenced_locally
-    const endMonth = endDate.getMonth()+1;
-    // svelte-ignore state_referenced_locally
-    const endDay = endDate.getDate();
+    const initialDate = $derived(startDate ?? new Date());
+
+    let year = $state(new Date().getFullYear());
+    let month = $state(new Date().getMonth() + 1);
+    
+    $effect(() => {
+        if (startDate) {
+            year = startDate.getFullYear();
+            month = startDate.getMonth() + 1;
+        }
+    });
+
 
     const monthNames = ['January','February','March','April','May','June',
         'July','August','September','October','November','December'];
@@ -54,11 +51,12 @@
         return shifts.filter(shift => shift.month === month && shift.day === day);
     };
 
-    function isInRange(day: number): boolean {
-        const afterStart = month > startMonth || (month === startMonth && day >= startDay);
-        const beforeEnd = month < endMonth || (month === endMonth && day <= endDay);
-        return afterStart && beforeEnd;
-    };
+function isInRange(day: number): boolean {
+    if (!startDate && !endDate) return false;
+
+    const date = new Date(year, month - 1, day);
+    return (!startDate || date >= startDate) && (!endDate || date <= endDate);
+}
 
     function changeMonth(direction: string) {
         switch(direction) {
