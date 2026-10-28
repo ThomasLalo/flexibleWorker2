@@ -94,22 +94,26 @@
 
 <main>
   <div class = "panel">
-    <a href={resolve('/worker')}>&lt;&lt;&lt; Back to dashboard</a>
-    <fieldset>
-      <legend>Date Range</legend>
-      <input type="date" aria-label="Start date" bind:value={sd} onchange={() => selectDay(null)} />
-      -
-      <input type="date" aria-label="End date" bind:value={ed} onchange={() => selectDay(null)} />
-    </fieldset>
+    <div class="control-panel">
+      <a href={resolve('/worker')}>&lt;&lt;&lt; Back to dashboard</a>
+      <h1>{selectedLocation?.address}</h1>
+      <fieldset>
+        <legend>Date Range</legend>
+        <input type="date" aria-label="Start date" bind:value={sd} onchange={() => selectDay(null)} />
+        -
+        <input type="date" aria-label="End date" bind:value={ed} onchange={() => selectDay(null)} />
+      </fieldset>
 
-    <fieldset>
-      <legend>Time Range</legend>
-      <input type="time" aria-label="Start time" bind:value={st} onchange={() => selectDay(null)} />
-      -
-      <input type="time" aria-label="End time" bind:value={et} onchange={() => selectDay(null)} />
-    </fieldset>
+      <fieldset>
+        <legend>Time Range</legend>
+        <input type="time" aria-label="Start time" bind:value={st} onchange={() => selectDay(null)} />
+        -
+        <input type="time" aria-label="End time" bind:value={et} onchange={() => selectDay(null)} />
+      </fieldset>
 
-    <button type="button" onclick={clearFilters}>Clear filters</button>
+      <button type="button" onclick={clearFilters}>Clear filters</button>
+    </div>
+
 
     <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
       bind:selectedDay={() => selectedDay, selectDay} bind:selectedShift/>
@@ -186,6 +190,21 @@
 
   .panel {
     padding: 1rem;
+  }
+
+  .control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .control-panel button {
+    align-self: flex-start;
+  }
+
+  .control-panel h1 {
+    color: #4D148C;
+    margin: 0;
   }
 
   .day-shift-list {

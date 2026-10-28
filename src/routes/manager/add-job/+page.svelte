@@ -136,28 +136,52 @@
 
 <main>
   <div class = "panel">
-    <a href={resolve("/manager")}>&lt;&lt;&lt; Back to dashboard</a>
-    <fieldset>
-      <legend>Date Range</legend>
-      <input type="date" bind:value={sd} />
-      -
-      <input type="date" bind:value={ed} />
-    </fieldset>
+    <div class = "control-panel">
 
-    <fieldset>
-      <legend>Time Range</legend>
-      <input type="time" bind:value={st} />
-      -
-      <input type="time" bind:value={et} />
-    </fieldset>
+      <a href={resolve("/manager")}>&lt;&lt;&lt; Back to dashboard</a>
+      <h1>{selectedLocation?.address}</h1>
 
-    <button type="button" aria-label="clear filters" onclick={clearFilters}> clear filters</button>
+      <fieldset>
+        <legend>Date Range</legend>
+        <input type="date" bind:value={sd} />
+        -
+        <input type="date" bind:value={ed} />
+      </fieldset>
+
+      <fieldset>
+        <legend>Time Range</legend>
+        <input type="time" bind:value={st} />
+        -
+        <input type="time" bind:value={et} />
+      </fieldset>
+
+      <button type="button" aria-label="clear filters" onclick={clearFilters}> clear filters</button>
+    </div>
 
     <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
       bind:selectedDay={() => selectedDay, selectDay} bind:selectedShift/>
   </div>
 
   <div class="panel claim-panel">
+    <h1>Add Shift</h1>
+
+    {#if error}<p role="alert">{error}</p>{/if}
+    {#if selectedLocation}
+      <p>Location: {selectedLocation.address}</p>
+      <form class="add-form" onsubmit={addShift}>
+        <label>Date <input type="date" bind:value={newDate} required /></label>
+        <label>Start time <input type="time" bind:value={newStartTime} step="3600" required /></label>
+        <label>End time <input type="time" bind:value={newEndTime} step="3600" required /></label>
+        <label>Role
+          <select bind:value={newRole}>
+            <option value="handler">Handler</option>
+            <option value="courier">Courier</option>
+          </select>
+        </label>
+        <button type="submit">Add shift</button>
+      </form>
+    {/if}
+
     <h2>
       {selectedDay
         ? `Shifts for ${selectedDay.month}/${selectedDay.day}/${selectedDay.year}`
@@ -204,24 +228,7 @@
         {selectedShift.startTime}:00–{selectedShift.endTime}:00
       </p>
     {/if}
-    <h1>Add Shift</h1>
 
-    {#if error}<p role="alert">{error}</p>{/if}
-    {#if selectedLocation}
-      <p>Location: {selectedLocation.address}</p>
-      <form class="add-form" onsubmit={addShift}>
-        <label>Date <input type="date" bind:value={newDate} required /></label>
-        <label>Start time <input type="time" bind:value={newStartTime} step="3600" required /></label>
-        <label>End time <input type="time" bind:value={newEndTime} step="3600" required /></label>
-        <label>Role
-          <select bind:value={newRole}>
-            <option value="handler">Handler</option>
-            <option value="courier">Courier</option>
-          </select>
-        </label>
-        <button type="submit">Add shift</button>
-      </form>
-    {/if}
 
 </div>
 </main>
@@ -239,6 +246,21 @@
 
   .panel {
     padding: 1rem;
+  }
+
+  .control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .control-panel button {
+    align-self: flex-start;
+  }
+
+  .control-panel h1 {
+    color: #4D148C;
+    margin: 0;
   }
 
   .add-form {

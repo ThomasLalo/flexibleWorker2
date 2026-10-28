@@ -212,7 +212,7 @@
         <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
           <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
           <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="85 15" stroke-dashoffset="25"></circle>
+          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4D148C" stroke-width="3" stroke-dasharray="85 15" stroke-dashoffset="25"></circle>
           <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
             85%
           </text>
@@ -224,7 +224,7 @@
         <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
           <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
           <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="66 34" stroke-dashoffset="25"></circle>
+          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4D148C" stroke-width="3" stroke-dasharray="66 34" stroke-dashoffset="25"></circle>
           <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
             66%
           </text>
@@ -250,7 +250,7 @@
     padding-left: 2rem;
     padding-right: 2rem;
     margin: 0;
-    color: purple;
+    color: #4D148C;
   }
 
 
@@ -312,8 +312,8 @@
 
   .shift.selected {
     background-color: #ece3f3;
-    border: 1px solid purple;
-    box-shadow: 0 0 0 1px purple;
+    border: 1px solid #4D148C;
+    box-shadow: 0 0 0 1px #4D148C;
   }
 
   .shift-details {
@@ -330,7 +330,7 @@
 
   .shift-time {
     font-weight: 600;
-    color: purple;
+    color: #4D148C;
   }
 
   .shift-status {

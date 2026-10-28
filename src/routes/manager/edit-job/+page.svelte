@@ -139,29 +139,51 @@
 
 <main>
   <div class = "panel">
-    <a href={resolve("/manager")}>&lt;&lt;&lt; Back to dashboard</a>
-    <fieldset>
-      <legend>Date Range</legend>
-      <input type="date" bind:value={sd} />
-      -
-      <input type="date" bind:value={ed} />
-    </fieldset>
+    <div class = "control-panel">
+      <a href={resolve("/manager")}>&lt;&lt;&lt; Back to dashboard</a>
+      <h1>{selectedLocation?.address}</h1>
+      <fieldset>
+        <legend>Date Range</legend>
+        <input type="date" bind:value={sd} />
+        -
+        <input type="date" bind:value={ed} />
+      </fieldset>
 
-    <fieldset>
-      <legend>Time Range</legend>
-      <input type="time" bind:value={st} />
-      -
-      <input type="time" bind:value={et} />
-    </fieldset>
+      <fieldset>
+        <legend>Time Range</legend>
+        <input type="time" bind:value={st} />
+        -
+        <input type="time" bind:value={et} />
+      </fieldset>
 
-    <button type="button" aria-label="clear filters" onclick={clearFilters}> clear filters</button>
-
+      <button type="button" aria-label="clear filters" onclick={clearFilters}> clear filters</button>
+    </div>
     <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
       bind:selectedDay={() => selectedDay, selectDay}
       bind:selectedShift={() => selectedShift, selectShift}/>
   </div>
 
   <div class="panel claim-panel">
+
+    <h1>Edit Shift</h1>
+    {#if error}<p role="alert">{error}</p>{/if}
+    {#if selectedShift}
+      <form class="edit-form" onsubmit={saveShift}>
+        <label>Date <input type="date" bind:value={editDate} required /></label>
+        <label>Start time <input type="time" bind:value={editStartTime} step="3600" required /></label>
+        <label>End time <input type="time" bind:value={editEndTime} step="3600" required /></label>
+        <label>Role
+          <select bind:value={editRole}>
+            <option value="handler">Handler</option>
+            <option value="courier">Courier</option>
+          </select>
+        </label>
+        <button type="submit">Save changes</button>
+      </form>
+    {:else if !error}
+      <p>Select a shift to edit.</p>
+    {/if}
+
     <h2>
       {selectedDay
         ? `Shifts for ${selectedDay.month}/${selectedDay.day}/${selectedDay.year}`
@@ -208,24 +230,6 @@
         {selectedShift.startTime}:00–{selectedShift.endTime}:00
       </p>
     {/if}
-    <h1>Edit Shift</h1>
-    {#if error}<p role="alert">{error}</p>{/if}
-    {#if selectedShift}
-      <form class="edit-form" onsubmit={saveShift}>
-        <label>Date <input type="date" bind:value={editDate} required /></label>
-        <label>Start time <input type="time" bind:value={editStartTime} step="3600" required /></label>
-        <label>End time <input type="time" bind:value={editEndTime} step="3600" required /></label>
-        <label>Role
-          <select bind:value={editRole}>
-            <option value="handler">Handler</option>
-            <option value="courier">Courier</option>
-          </select>
-        </label>
-        <button type="submit">Save changes</button>
-      </form>
-    {:else if !error}
-      <p>Select a shift to edit.</p>
-    {/if}
 
 </div>
 </main>
@@ -243,6 +247,21 @@
 
   .panel {
     padding: 1rem;
+  }
+
+  .control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .control-panel button {
+    align-self: flex-start;
+  }
+
+  .control-panel h1 {
+    color: #4D148C;
+    margin: 0;
   }
 
   .edit-form {
