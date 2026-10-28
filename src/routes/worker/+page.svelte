@@ -39,7 +39,17 @@
       {#each locations as location}
         <header class="location">
           <h2>{location.address}</h2>
-          <button type="button">View Map</button>
+          <button
+            type="button"
+            onclick={() =>
+              window.open(
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`,
+                '_blank',
+                'noopener,noreferrer'
+              )}
+          >
+            View Map
+          </button>
         </header>
 
         <!-- {#each location.shifts as shift} -->
