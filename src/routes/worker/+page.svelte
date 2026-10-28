@@ -26,7 +26,7 @@
 </script>
 
 <main>
-<div class = "panel calendar-panel">
+<div class = "panel">
     <a href={resolve('/')}>&lt;&lt;&lt; Back to login</a>
   </div>
   <h1 class="dashboard-title">Employee Dashboard <hr /></h1>
@@ -167,16 +167,6 @@
 
   .panel{
     padding: 1rem;
-  }
-
-  .calendar-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .calendar-panel button {
-    align-self: flex-start;
   }
 
   h1 {
