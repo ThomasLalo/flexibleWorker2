@@ -266,7 +266,7 @@
   /* there is probably a better way to do this */
   .time-changed .shift-status,
   .time-changed .shift-actions {
-    color:orange;
+    color:#FF6600;
   }
 
   .shift-canceled .shift-status,

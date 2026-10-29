@@ -321,7 +321,7 @@
 
   .shift-unclaimed .shift-status,
   .shift-unclaimed .shift-actions {
-    color:orange;
+    color:#FF6600;
   }
 
   .shift-canceled .shift-status,    
