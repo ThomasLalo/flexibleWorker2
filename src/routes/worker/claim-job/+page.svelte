@@ -131,7 +131,7 @@
             class:claimed={Boolean(shift.worker)}
             class:selected={shift === selectedShift}
             onclick={() => selectedShift = shift}>
-            <span>{shift.startTime}:00–{shift.endTime}:00 ({shift.role})</span>
+            <span>{shift.startTime}:00-{shift.endTime}:00 - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
             <span>{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
             {#if shift.canceled}<span>Canceled</span>{/if}
           </button>
@@ -147,7 +147,7 @@
             class:claimed={Boolean(shift.worker)}
             class:selected={shift === selectedShift}
             onclick={() => selectedShift = shift}>
-            <span>{shift.startTime}:00–{shift.endTime}:00 ({shift.role})</span>
+            <span>{shift.startTime}:00-{shift.endTime}:00 - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
             <span>{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
             {#if shift.canceled}<span>Canceled</span>{/if}
           </button>
@@ -159,7 +159,7 @@
     {#if selectedShift}
       <p>
         Selected: {selectedShift.month}/{selectedShift.day},
-        {selectedShift.startTime}:00–{selectedShift.endTime}:00
+        {selectedShift.startTime}:00-{selectedShift.endTime}:00
       </p>
     {/if}
     <h1>Claim Shift</h1>
