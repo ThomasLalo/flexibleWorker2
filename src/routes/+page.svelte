@@ -18,7 +18,13 @@
 
 
 <main>
-  <div class = "login-form">
+  <form
+    class="login-form"
+    onsubmit={(event) => {
+      event.preventDefault();
+      login();
+    }}
+  >
     <h1>Login</h1>
     <div>
       <label for="username">Username:</label><br>
@@ -30,8 +36,8 @@
     </div>
 
     <!-- <input type="button" class = "button" value="Login">  -->
-    <button onclick={login} class="button"> log in </button> <br>
-  </div>
+    <button type="submit" class="button"> log in </button> <br>
+  </form>
 
   <!-- temp navigation -->
   <!-- <a href="/worker">Go to worker dashboard</a> <br/> -->
