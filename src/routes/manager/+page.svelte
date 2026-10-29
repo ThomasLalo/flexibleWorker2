@@ -1,12 +1,133 @@
-<script>
+<script lang="ts">
+  import WarningIcon from '#lib/WarningIcon.svelte';
+  import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
+  import { goto } from '$app/navigation';
 
+
+  let loc = $state('123 Address Dr.');
+  let sd = $state("2026-09-28");
+  let ed = $state("2026-09-30");
+  let st = $state('08:00');
+  let et = $state('20:00');
+
+  let selectedLocation = $derived(locations.find(item => item.address === loc))!;
+
+  let startDate = $derived(new Date(sd + "T00:00"));
+  let endDate = $derived(new Date(ed + "T00:00"));
+  let startHour = $derived(parseInt(st));
+  let endHour = $derived(parseInt(et));
+
+  let shiftsInRange: Shift[] = $derived(
+    selectedLocation?.shifts.filter(shift => {
+      const date = new Date(startDate.getFullYear(), shift.month - 1, shift.day);
+      return (
+        date >= startDate &&
+        date <= endDate &&
+        shift.startTime >= startHour &&
+        shift.endTime <= endHour 
+      );
+    }) ?? [] //typescript warning avoidance
+  );
+
+
+  let selectedShift: Shift | null = $state(null);
+
+  function toggle(shift: Shift) {
+    if (selectedShift === shift) {
+      selectedShift = null;
+      return;
+    }
+    selectedShift = shift;
+  }
+
+  function clickedAddJob() {
+    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et});
+    goto(`/manager/add-job?${params}`);
+  }
+
+  function clickedEditJob() {
+    const indexOfSelectedShift = selectedLocation.shifts.findIndex(shift => shift === selectedShift).toString();
+    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et, index:indexOfSelectedShift});
+    goto(`/manager/edit-job?${params}`);
+  }
+
+  function gotoRoster() {
+    goto(`/manager/roster`)
+  }
 </script>
 
 <main>
   <h1>Manager Dashboard <hr> </h1>
 
+  <div class="main-layout">
+    <div class="location-shifts">
+      <div class="filters">
+        <fieldset>
+          <legend>Location</legend>
+          <select bind:value={loc}>
+            <option value="" disabled>Choose a location</option>
+            {#each locations as l}
+              <option value={l.address}>{l.address}</option>
+            {/each}
+          </select>
+        </fieldset>
 
-  
+        <fieldset>
+          <legend>Date Range</legend>
+          <input type="date" bind:value={sd} />
+          -
+          <input type="date" bind:value={ed} />
+        </fieldset>
+
+        <fieldset>
+          <legend>Time Range</legend>
+          <input type="time" bind:value={st} />
+          -
+          <input type="time" bind:value={et} />
+        </fieldset>
+
+        <fieldset>
+        <button type="button" onclick={clickedAddJob}>Add Job</button>
+        </fieldset>
+      </div>
+
+      <div class="location-shifts">
+        <h2>{selectedLocation.address}</h2>
+
+        {#each shiftsInRange as shift}
+          <div class={["shift", !shift.worker && "shift-unclaimed", shift.canceled && "shift-canceled", shift === selectedShift && "selected"]} onclick={() => toggle(shift)}>
+            <div class="shift-details">
+              <span class="shift-date">{shift.month}/{shift.day}</span>
+              <span class="shift-time">{shift.startTime}:00 - {shift.endTime}:00</span>
+            </div>
+
+            <div class="shift-actions">
+              {#if !shift.worker}
+                <span class="shift-status">Unlcaimed</span>
+                <WarningIcon />
+              {:else if shift.canceled}
+                <span class="shift-status">Canceled</span>
+                <WarningIcon />
+              {/if}
+              {#if shift === selectedShift}
+                <button type="button" onclick={clickedEditJob}>Edit Job</button>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+    <div class="location-shifts">
+      <h2>Roster<hr></h2>
+      {#each roster as worker}
+        <div class="shift">{worker.name}</div>
+      {/each}
+      <button type="button" onclick={gotoRoster}>View Full Roster</button>
+    </div>
+  </div>
+
+  </main>
+  <!--
   <div class = "main-layout">
     <div class = "location-shifts">
 
@@ -35,7 +156,7 @@
 
       <div class="location-title">
         <h2>123 Address Dr.</h2>
-        <!-- <button type="button">View Calendar</button> -->
+        <!-- <button type="button">View Calendar</button> --/>
       </div>
       <hr>
 
@@ -114,7 +235,7 @@
   </div>
 
 </main>
-
+-->
 
 <style>
   main {
@@ -227,6 +348,16 @@
     display: flex;
     gap: 0.5rem;
     flex-shrink: 0;
+  }
+
+  .shift-unclaimed .shift-status,
+  .shift-unclaimed .shift-actions {
+    color:orange;
+  }
+
+  .shift-canceled .shift-status,    
+  .shift-canceled .shift-actions {
+  color: red;
   }
 
   .shift-actions button {
