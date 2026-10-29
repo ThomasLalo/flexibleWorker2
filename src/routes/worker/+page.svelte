@@ -26,7 +26,7 @@
 </script>
 
 <main>
-<div class = "panel">
+  <div class = "panel">
     <a href={resolve('/')}>&lt;&lt;&lt; Back to login</a>
   </div>
   <h1 class="dashboard-title">Employee Dashboard <hr /></h1>
@@ -177,12 +177,18 @@
     margin: 0;
     padding: 2rem 2rem 0;
   }
-
+    @media (max-width: 800px) {
+      .dashboard-columns {
+        flex-direction: column;
+      }
+    }
+  
   .dashboard-columns {
     display: flex;
     gap: 4rem;
     padding: 0 2rem 2rem;
   }
+
 
   .dashboard-panel {
     display: flex;

@@ -203,7 +203,7 @@ button.day:hover .day-header,
 .shift {
     background-color: #333333 ;
     text-align: center;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     padding: 1px;
     margin: 1px 0;
     border-radius: 4px;
