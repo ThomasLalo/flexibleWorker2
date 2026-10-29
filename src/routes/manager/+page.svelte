@@ -52,6 +52,11 @@
     goto(`${resolve('/manager/edit-job')}?${params}`);
   }
 
+  function removeShift(shift: Shift) {
+    shift.canceled = true;
+    selectedShift = null;
+  }
+
   function gotoRoster() {
     goto(`/manager/roster`)
   }
@@ -63,6 +68,7 @@
   <div class="main-layout">
     <div class="location-shifts">
       <div class="filters">
+
         <fieldset>
           <legend>Location</legend>
           <select bind:value={loc}>
@@ -102,22 +108,59 @@
               <span class="shift-time">{shift.startTime}:00 - {shift.endTime}:00</span>
             </div>
 
+            <div>
+              <span class="shift-date">{shift.role}</span>
+              {#if shift.worker}
+                <span class="shift-worker">· {shift.worker}</span>
+              {/if}
+            </div>
+
+            <div class="shift-actions">
+              <div class="shift-warnings">
+                {#if !shift.worker}
+                  <div class="shift-warning">
+                    <WarningIcon />
+                    <span>Unclaimed</span>
+                  </div>
+                {/if}
+                {#if shift.canceled}
+                  <div class="shift-warning">
+                    <WarningIcon />
+                    <span>Canceled</span>
+                  </div>
+                {/if}
+              </div>
+
+              <div class="shift-buttons">
+                {#if shift === selectedShift}
+                  <button type="button" onclick={(event) => {event.stopPropagation();clickedEditJob();}}>Edit Shift</button>
+                  <button type="button" onclick={(event) => {event.stopPropagation(); removeShift(shift);}}>Remove Shift</button>
+                {/if}
+              </div>
+            </div>
+
+            <!-- to revert back to if needed
+
             <div class="shift-actions">
               {#if !shift.worker}
                 <span class="shift-status">Unlcaimed</span>
                 <WarningIcon />
-              {:else if shift.canceled}
+              {/if}
+              {#if shift.canceled}
                 <span class="shift-status">Canceled</span>
                 <WarningIcon />
               {/if}
               {#if shift === selectedShift}
-                <button type="button" onclick={clickedEditJob}>Edit Job</button>
+                <button type="button" onclick={(event) => {event.stopPropagation();clickedEditJob();}}>Edit Shift</button>
+                <button type="button" onclick={(event) => {event.stopPropagation(); removeShift(shift);}}>Remove Shift</button>
               {/if}
             </div>
+            -->
           </div>
         {/each}
       </div>
     </div>
+
     <div class="location-shifts">
       <h2>Roster<hr></h2>
       {#each roster as worker}
@@ -347,9 +390,49 @@
 
   .shift-actions {
     display: flex;
-    gap: 0.5rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
     flex-shrink: 0;
   }
+
+  .shift-warnings,
+  .shift-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .shift-warning {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .shift-warning svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .shift-buttons button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .shift-worker {
+    font-size: 1.2rem;
+    color:#302738;
+  }
+/*
+  .shift-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }*/
 
   .shift-unclaimed .shift-status,
   .shift-unclaimed .shift-actions {
@@ -362,9 +445,9 @@
   }
 
   .shift-actions button {
-    padding: 0.4rem 0.9rem;
+    padding: 0.25rem 0.5rem;
     font: inherit;
-    font-size: 1rem;
+    font-size: 0.8rem;
     cursor: pointer;
   }
 
