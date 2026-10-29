@@ -4,7 +4,6 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
 
-
   let loc = $state('123 Address Dr.');
   let sd = $state("2026-09-28");
   let ed = $state("2026-09-30");
@@ -29,7 +28,6 @@
       );
     }) ?? [] //typescript warning avoidance
   );
-
 
   let selectedShift: Shift | null = $state(null);
 
@@ -58,7 +56,8 @@
   }
 
   function gotoRoster() {
-    goto(`/manager/roster`)
+    goto(resolve('/manager/roster'));
+
   }
 </script>
 
@@ -102,18 +101,22 @@
         <h2>{selectedLocation.address}</h2>
 
         {#each shiftsInRange as shift}
+          <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
           <div class={["shift", !shift.worker && "shift-unclaimed", shift.canceled && "shift-canceled", shift === selectedShift && "selected"]} onclick={() => toggle(shift)}>
             <div class="shift-details">
               <span class="shift-date">{shift.month}/{shift.day}</span>
-              <span class="shift-time">{shift.startTime}:00 - {shift.endTime}:00</span>
+              <span class="shift-time">{shift.startTime}:00 a.m. - {shift.endTime-12}:00 p.m.</span>
             </div>
 
+
+            <span class="shift-date">{shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
             <div>
-              <span class="shift-date">{shift.role}</span>
-              {#if shift.worker}
-                <span class="shift-worker">· {shift.worker}</span>
-              {/if}
+            {#if shift.worker}
+              <span class="shift-worker">· {shift.worker}</span>
+            {/if}
+
             </div>
+
 
             <div class="shift-actions">
               <div class="shift-warnings">
@@ -138,148 +141,28 @@
                 {/if}
               </div>
             </div>
-
-            <!-- to revert back to if needed
-
-            <div class="shift-actions">
-              {#if !shift.worker}
-                <span class="shift-status">Unlcaimed</span>
-                <WarningIcon />
-              {/if}
-              {#if shift.canceled}
-                <span class="shift-status">Canceled</span>
-                <WarningIcon />
-              {/if}
-              {#if shift === selectedShift}
-                <button type="button" onclick={(event) => {event.stopPropagation();clickedEditJob();}}>Edit Shift</button>
-                <button type="button" onclick={(event) => {event.stopPropagation(); removeShift(shift);}}>Remove Shift</button>
-              {/if}
-            </div>
-            -->
           </div>
         {/each}
       </div>
     </div>
 
-    <div class="location-shifts">
+    <div class="roster">
       <h2>Roster<hr></h2>
       {#each roster as worker}
-        <div class="shift">{worker.name}</div>
+        <div class="worker-card">{worker.name}
+            <div class="worker-info">
+              <span class = "job-title">{worker.role.charAt(0).toUpperCase()+ worker.role.slice(1)} - </span>
+              <span title="Punctuality">Punctuality {worker.punctuality}% - </span>
+              <span title="Attendance">Attendance {worker.attendance}%</span>
+            </div>
+        </div>
       {/each}
       <button type="button" onclick={gotoRoster}>View Full Roster</button>
     </div>
   </div>
 
   </main>
-  <!--
-  <div class = "main-layout">
-    <div class = "location-shifts">
-
-      <div class="filters">
-        <fieldset>
-          <legend>Location</legend>
-          <select aria-label="Location">
-            <option>123 Address Dr.</option>
-            <option>456 Oak St.</option>
-            <option>789 Maple Ave.</option>
-          </select>
-        </fieldset>
-        <fieldset>
-          <legend>Date range</legend>
-          <input type="date" aria-label="Start date" value="2026-09-28" />
-          -
-          <input type="date" aria-label="End date" value="2026-09-30" />
-        </fieldset>
-        <fieldset>
-          <legend>Time of day</legend>
-          <input type="time" aria-label="Start time" value="08:00" />
-          -
-          <input type="time" aria-label="End time" value="20:00" />
-        </fieldset>
-      </div>
-
-      <div class="location-title">
-        <h2>123 Address Dr.</h2>
-        <!-- <button type="button">View Calendar</button> --/>
-      </div>
-      <hr>
-
-      <div class = "shift">
-        <div class="shift-details">
-          <span class="shift-date">9/28</span>
-          <span class="shift-time">12 PM - 8 PM</span>
-        </div>
-      </div>
-
-      <div class = "shift">
-        <div class="shift-details">
-          <span class="shift-date">9/28</span>
-          <span class="shift-time">9 AM - 5 PM</span>
-        </div>
-      </div>
-
-      <div class = "shift selected">
-        <div class="shift-details">
-          <span class="shift-date">9/29</span>
-          <span class="shift-time">8 AM - 4 PM</span>
-        </div>
-        <div class="shift-actions">
-          <button type="button">Edit Job</button>
-          <button type="button">Remove Job</button>
-        </div>
-      </div>
-
-      <div class = "shift">
-        <div class="shift-details">
-          <span class="shift-date">9/30</span>
-          <span class="shift-time">10 AM - 6 PM</span>
-          <span class="shift-status">Unclaimed</span>
-        </div>
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13.5 3.5C12.8 2.3 11.2 2.3 10.5 3.5L1.3 19.5C0.6 20.7 1.5 22.2 2.9 22.2H21.1C22.5 22.2 23.4 20.7 22.7 19.5L13.5 3.5Z" stroke="#FF0000" stroke-width="1" />
-          <rect x="11" y="8" width="2" height="7" rx="1" fill="#FF0000"/>
-          <circle cx="12" cy="17.5" r="1.2" fill="#FF0000"/>
-        </svg>
-      </div>
-
-      <div class="location-actions">
-        <button type="button">Add Job</button>
-      </div>
-
-    </div>
-
-    <div class="donut-charts">
-    
-      <div class = "chart">
-        <h2>Punctuality </h2>
-        <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
-          <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
-          <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4D148C" stroke-width="3" stroke-dasharray="85 15" stroke-dashoffset="25"></circle>
-          <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
-            85%
-          </text>
-        </svg>
-      </div>
-
-      <div class = "chart">
-        <h2>Attendance  </h2>
-        <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
-          <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
-          <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4D148C" stroke-width="3" stroke-dasharray="66 34" stroke-dashoffset="25"></circle>
-          <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
-            66%
-          </text>
-        </svg>
-      </div>
-
-    </div>
-
-  </div>
-
-</main>
--->
+ 
 
 <style>
   main {
@@ -296,13 +179,10 @@
     color: #4D148C;
   }
 
-
-  /* .filters {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  } */
+  .worker-info {
+    color: #6f6578;
+    font-size: 1rem;
+  }
 
   .filters {
     display: flex;
@@ -326,7 +206,11 @@
     margin: 0;
     padding: 0;
   }
-
+    @media (max-width: 800px) {
+      .main-layout {
+        flex-direction: column;
+      }
+  }
   .main-layout {
     display: flex;
     gap: 4rem;
@@ -336,9 +220,28 @@
   }
 
   .shift {
-    display: flex;
+    display: grid;
     align-items: center;
-    justify-content: space-between;
+    grid-template-columns: auto auto 1fr max-content;
+    justify-content:space-between;
+    gap: 1rem;
+
+    background-color: #f6f3f8;
+    border: 1px solid #dcd5e2;
+    border-radius: 8px;
+    padding: 14px 20px;
+    min-height: 56px;
+    box-sizing: border-box;
+    font-family: system-ui, sans-serif;
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: #302738;
+  }
+
+  .worker-card {
+    display: flex;
+    /* align-items: center; */
+    justify-content:space-between;
     gap: 1rem;
 
     background-color: #f6f3f8;
@@ -374,18 +277,6 @@
   .shift-time {
     font-weight: 600;
     color: #4D148C;
-  }
-
-  .shift-status {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #b42318;
-  }
-
-  .shift svg {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
   }
 
   .shift-actions {
@@ -424,15 +315,9 @@
   }
 
   .shift-worker {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color:#302738;
   }
-/*
-  .shift-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }*/
 
   .shift-unclaimed .shift-status,
   .shift-unclaimed .shift-actions {
@@ -451,19 +336,15 @@
     cursor: pointer;
   }
 
-  .location-title {
-    display: flex;
-    align-items: center;
-    justify-content:left;
-    gap: 1rem;
-    margin-top: 0.5rem;
-  }
-
-  .location-title h2 {
-    margin: 0;
-  }
-
   .location-shifts {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .roster {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -471,39 +352,19 @@
     min-width: 0;
   }
 
-  .location-shifts > hr {
-    margin: 0;
-  }
-
-  .location-actions {
-    display: flex;
-    gap: 1rem;
+  .roster button {
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    margin-top: 1rem;
   }
 
   .filters input,
   .filters select,
-  .location-actions button {
+  .filters button {
     padding: 0.5rem 1rem;
     font: inherit;
     cursor: pointer;
-  }
-
-  .donut-charts {
-    flex: 1;
-    display: flex;
-    /* flex-direction: column; */
-    justify-content: space-around;
-    min-width: 0;
-  }
-
-  .chart {
-    text-align: center;
-  }
-
-  .donut {
-    width: 150px;
-    max-width: 100%;
-    height: auto;
   }
 
 </style>
