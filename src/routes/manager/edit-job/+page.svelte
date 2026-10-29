@@ -245,6 +245,12 @@
     margin: 0;
   }
 
+  @media (max-width: 800px) {
+    main {
+      flex-direction: column;
+    }
+  }
+
   .panel {
     padding: 1rem;
   }
