@@ -3,6 +3,10 @@
   import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import NotificationBox from '#lib/notificationBox.svelte';
+  import { checkLate } from '#lib/notifications.svelte.ts';
+  
+  checkLate();
 
   let loc = $state('123 Address Dr.');
   let sd = $state("2026-09-28");
@@ -161,6 +165,7 @@
     </div>
   </div>
 
+  <NotificationBox recipient = "manager" />
   </main>
  
 

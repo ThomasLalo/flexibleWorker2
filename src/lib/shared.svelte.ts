@@ -7,6 +7,7 @@ export type Shift = {
   worker?: string; // these could be Woker objects instead, but honestly it would just be more work
   canceled?: boolean;
   timeChanged?: boolean;
+  late?: boolean;
 };
 
 export type Location = {
@@ -40,7 +41,7 @@ export const locations: Location[] = $state([
 
       { month: 9, day: 15, startTime: 7, endTime: 15, role: "handler", worker: "Emma Johnson", timeChanged: true},
       { month: 9, day: 15, startTime: 8, endTime: 16, role: "courier", worker: "Liam Carter" },
-      { month: 9, day: 15, startTime: 9, endTime: 17, role: "handler", worker: "Olivia Martinez" },
+      { month: 9, day: 15, startTime: 9, endTime: 17, role: "handler", worker: "Olivia Martinez", late: true},
       { month: 9, day: 15, startTime: 10, endTime: 18, role: "courier", worker: "Noah Bennett" },
       { month: 9, day: 15, startTime: 12, endTime: 20, role: "handler", worker: "Ava Thompson" },
       { month: 9, day: 15, startTime: 14, endTime: 22, role: "courier", worker: "Isabella Patel" },
@@ -48,7 +49,7 @@ export const locations: Location[] = $state([
       { month: 9, day: 17, startTime: 9, endTime: 15, role: "courier" },
       { month: 9, day: 21, startTime: 9, endTime: 17, role: "handler" },
       { month: 9, day: 27, startTime: 6, endTime: 14, role: "handler", worker: "Sophia Nguyen" },
-      { month: 9, day: 27, startTime: 7, endTime: 15, role: "courier", worker: "Ethan Brooks" },
+      { month: 9, day: 27, startTime: 7, endTime: 15, role: "courier", worker: "Ethan Brooks", late: true},
       { month: 9, day: 27, startTime: 8, endTime: 16, role: "handler", worker: "Lucas Foster", canceled: true },
       { month: 9, day: 27, startTime: 11, endTime: 19, role: "courier", worker: "Mason Reed" },
       { month: 9, day: 27, startTime: 12, endTime: 20, role: "handler", worker: "Emma Johnson" },
@@ -78,6 +79,8 @@ export const locations: Location[] = $state([
       { month: 10, day: 15, startTime: 8, endTime: 16, role: "courier" },
       { month: 10, day: 23, startTime: 12, endTime: 20, role: "handler" },
       { month: 10, day: 30, startTime: 9, endTime: 17, role: "courier" },
+      { month: 11, day: 10, startTime: 9, endTime: 15, role: "handler", worker: "Emma Johnson"},
+      { month: 11, day: 12, startTime: 9, endTime: 17, role: "handler", worker: "Emma Johnson"},
     ],
   },
   {
@@ -86,9 +89,9 @@ export const locations: Location[] = $state([
       { month: 9, day: 4, startTime: 7, endTime: 15, role: "handler" },
       { month: 9, day: 11, startTime: 9, endTime: 17, role: "courier" },
       { month: 9, day: 16, startTime: 8, endTime: 16, role: "courier", worker: "Liam Carter" },
-      { month: 9, day: 20, startTime: 7, endTime: 15, role: "courier", worker: "Mason Reed" },
+      { month: 9, day: 20, startTime: 7, endTime: 15, role: "courier", worker: "Mason Reed", late: true},
       { month: 9, day: 20, startTime: 8, endTime: 16, role: "handler", worker: "Sophia Nguyen" },
-      { month: 9, day: 20, startTime: 9, endTime: 17, role: "courier", worker: "Liam Carter" },
+      { month: 9, day: 20, startTime: 9, endTime: 17, role: "courier", worker: "Liam Carter", late: true },
       { month: 9, day: 20, startTime: 10, endTime: 18, role: "handler", worker: "Emma Johnson" },
       { month: 9, day: 20, startTime: 12, endTime: 20, role: "courier", worker: "Isabella Patel" },
       { month: 9, day: 20, startTime: 14, endTime: 22, role: "handler", worker: "Lucas Foster" },
