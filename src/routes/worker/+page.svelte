@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
   // currently logged in
@@ -25,8 +26,8 @@
 </script>
 
 <main>
-<div class = "panel">
-    <a href="/">&lt;&lt;&lt; Back to login</a>
+  <div class = "panel">
+    <a href={resolve('/')}>&lt;&lt;&lt; Back to login</a>
   </div>
   <h1 class="dashboard-title">Employee Dashboard <hr /></h1>
 
@@ -38,7 +39,17 @@
       {#each locations as location}
         <header class="location">
           <h2>{location.address}</h2>
-          <button type="button">View Map</button>
+          <button
+            type="button"
+            onclick={() =>
+              window.open(
+                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`,
+                '_blank',
+                'noopener,noreferrer'
+              )}
+          >
+            View Map
+          </button>
         </header>
 
         <!-- {#each location.shifts as shift} -->
@@ -67,7 +78,7 @@
                 <WarningIcon />
               {/if}
               {#if shift === selectedShift}
-                <button type="button" onclick={() => { removeShift(shift); }}> Remove Shift</button>
+                <button type="button" onclick={(event) => {event.stopPropagation(); shift.canceled = true }}> Remove Shift</button>
               {/if}
             </div>
           </div>
@@ -78,7 +89,7 @@
     <section class="dashboard-panel">
       <h1>Claim Shifts</h1>
 
-      <form class="filters" action ="/worker/claim-job">
+      <form class="filters" action ={resolve('/worker/claim-job')}>
         <fieldset>
           <legend>Location</legend>
           <select name = "location">
@@ -113,7 +124,7 @@
         <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
           <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
           <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="{workerInfo?.punctuality  ?? 0} {100 - (workerInfo?.punctuality  ?? 0)}" stroke-dashoffset="25"></circle>
+          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4D148C" stroke-width="3" stroke-dasharray="{workerInfo?.punctuality  ?? 0} {100 - (workerInfo?.punctuality  ?? 0)}" stroke-dashoffset="25"></circle>
           <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
             {workerInfo?.punctuality  ?? 0}%
           </text>
@@ -125,7 +136,7 @@
         <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
           <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
           <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="{workerInfo?.attendance ?? 0} {100 - (workerInfo?.attendance ?? 0)}" stroke-dashoffset="25"></circle>
+          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4D148C" stroke-width="3" stroke-dasharray="{workerInfo?.attendance ?? 0} {100 - (workerInfo?.attendance ?? 0)}" stroke-dashoffset="25"></circle>
           <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
             {workerInfo?.attendance  ?? 0}%
           </text>
@@ -159,19 +170,25 @@
   }
 
   h1 {
-    color: purple;
+    color: #4D148C;
   }
 
   .dashboard-title {
     margin: 0;
     padding: 2rem 2rem 0;
   }
-
+    @media (max-width: 800px) {
+      .dashboard-columns {
+        flex-direction: column;
+      }
+    }
+  
   .dashboard-columns {
     display: flex;
     gap: 4rem;
     padding: 0 2rem 2rem;
   }
+
 
   .dashboard-panel {
     display: flex;
@@ -210,8 +227,8 @@
 
   .shift.selected {
     background-color: #ece3f3;
-    border-color: purple;
-    box-shadow: 0 0 0 1px purple;
+    border-color: #4D148C;
+    box-shadow: 0 0 0 1px #4D148C;
   }
 
   /* all the stuff on the left of the shift. date, time, and status */
@@ -233,7 +250,7 @@
   }
 
   .shift-time {
-    color: purple;
+    color: #4D148C;
     font-weight: 600;
   }
 
@@ -255,7 +272,7 @@
   /* there is probably a better way to do this */
   .time-changed .shift-status,
   .time-changed .shift-actions {
-    color:orange;
+    color:#FF6600;
   }
 
   .shift-canceled .shift-status,

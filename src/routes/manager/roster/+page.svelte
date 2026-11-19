@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import { locations, roster, type Shift, type Worker } from '#lib/shared.svelte.ts';
 
@@ -92,7 +93,7 @@
         cy="21"
         r="15.91549430918954"
         fill="transparent"
-        stroke={value < FLAG_THRESHOLD ? 'orange' : 'purple'}
+        stroke={value < FLAG_THRESHOLD ? '#FF6600' : '#4D148C'}
         stroke-width="3"
         stroke-dasharray="{value} {100 - value}"
         stroke-dashoffset="25"
@@ -104,7 +105,7 @@
 
 <main>
   <h1 class="page-title">Roster <hr /></h1>
-  <a class="back-link" href="/manager">&larr; Back to dashboard</a>
+  <a class="back-link" href={resolve('/manager')}>&larr; Back to dashboard</a>
 
   <div class="main-layout">
     <section class="roster-panel">
@@ -241,7 +242,7 @@
   }
 
   h1 {
-    color: purple;
+    color: #4D148C;
   }
 
   .page-title {
@@ -252,7 +253,7 @@
   .back-link {
     display: inline-block;
     margin: 0 2rem 1rem;
-    color: purple;
+    color: #4D148C;
   }
 
   .main-layout {
@@ -328,8 +329,8 @@
 
   .worker.selected {
     background-color: #ece3f3;
-    border-color: purple;
-    box-shadow: 0 0 0 1px purple;
+    border-color: #4D148C;
+    box-shadow: 0 0 0 1px #4D148C;
   }
 
   .worker-details {
@@ -341,7 +342,7 @@
   }
 
   .worker-name {
-    color: purple;
+    color: #4D148C;
     font-size: 1.25rem;
     font-weight: 600;
   }
@@ -366,7 +367,7 @@
 
   .flagged .worker-status,
   .flagged .warning {
-    color: orange;
+    color: #FF6600;
   }
 
   .warning {
@@ -376,7 +377,7 @@
   /* detail panel */
   .detail-panel h2 {
     margin: 0;
-    color: purple;
+    color: #4D148C;
   }
 
   .detail-panel h3 {
@@ -421,14 +422,14 @@
 
   .tag {
     padding: 2px 10px;
-    border: 1px solid purple;
+    border: 1px solid #4D148C;
     border-radius: 999px;
-    color: purple;
+    color: #4D148C;
     font-size: 0.9rem;
   }
 
   .tag.role {
-    background-color: purple;
+    background-color: #4D148C;
     color: white;
   }
 
@@ -454,7 +455,7 @@
   }
 
   .shift-time {
-    color: purple;
+    color: #4D148C;
     font-weight: 600;
   }
 
@@ -465,7 +466,7 @@
 
   /* same colors the worker dashboard uses for these states */
   .time-changed .shift-status {
-    color: orange;
+    color: #FF6600;
   }
 
   .shift-canceled .shift-status {

@@ -1,120 +1,168 @@
-<script>
+<script lang="ts">
+  import WarningIcon from '#lib/WarningIcon.svelte';
+  import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
 
+  let loc = $state('123 Address Dr.');
+  let sd = $state("2026-09-28");
+  let ed = $state("2026-09-30");
+  let st = $state('08:00');
+  let et = $state('20:00');
+
+  let selectedLocation = $derived(locations.find(item => item.address === loc))!;
+
+  let startDate = $derived(new Date(sd + "T00:00"));
+  let endDate = $derived(new Date(ed + "T00:00"));
+  let startHour = $derived(parseInt(st));
+  let endHour = $derived(parseInt(et));
+
+  let shiftsInRange: Shift[] = $derived(
+    selectedLocation?.shifts.filter(shift => {
+      const date = new Date(startDate.getFullYear(), shift.month - 1, shift.day);
+      return (
+        date >= startDate &&
+        date <= endDate &&
+        shift.startTime >= startHour &&
+        shift.endTime <= endHour 
+      );
+    }) ?? [] //typescript warning avoidance
+  );
+
+  let selectedShift: Shift | null = $state(null);
+
+  function toggle(shift: Shift) {
+    if (selectedShift === shift) {
+      selectedShift = null;
+      return;
+    }
+    selectedShift = shift;
+  }
+
+  function clickedAddJob() {
+    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et});
+    goto(`${resolve('/manager/add-job')}?${params}`);
+  }
+
+  function clickedEditJob() {
+    const indexOfSelectedShift = selectedLocation.shifts.findIndex(shift => shift === selectedShift).toString();
+    const params = new URLSearchParams({location: loc, startDate:sd, endDate:ed, startTime:st, endTime:et, index:indexOfSelectedShift});
+    goto(`${resolve('/manager/edit-job')}?${params}`);
+  }
+
+  function removeShift(shift: Shift) {
+    shift.canceled = true;
+    selectedShift = null;
+  }
+
+  function gotoRoster() {
+    goto(resolve('/manager/roster'));
+
+  }
 </script>
 
 <main>
   <h1>Manager Dashboard <hr> </h1>
 
-
-  
-  <div class = "main-layout">
-    <div class = "location-shifts">
-
+  <div class="main-layout">
+    <div class="location-shifts">
       <div class="filters">
+
         <fieldset>
           <legend>Location</legend>
-          <select aria-label="Location">
-            <option>123 Address Dr.</option>
-            <option>456 Oak St.</option>
-            <option>789 Maple Ave.</option>
+          <select bind:value={loc}>
+            <option value="" disabled>Choose a location</option>
+            {#each locations as l}
+              <option value={l.address}>{l.address}</option>
+            {/each}
           </select>
         </fieldset>
+
         <fieldset>
-          <legend>Date range</legend>
-          <input type="date" aria-label="Start date" value="2026-09-28" />
+          <legend>Date Range</legend>
+          <input type="date" bind:value={sd} />
           -
-          <input type="date" aria-label="End date" value="2026-09-30" />
+          <input type="date" bind:value={ed} />
         </fieldset>
+
         <fieldset>
-          <legend>Time of day</legend>
-          <input type="time" aria-label="Start time" value="08:00" />
+          <legend>Time Range</legend>
+          <input type="time" bind:value={st} />
           -
-          <input type="time" aria-label="End time" value="20:00" />
+          <input type="time" bind:value={et} />
+        </fieldset>
+
+        <fieldset>
+        <button type="button" onclick={clickedAddJob}>Add Job</button>
         </fieldset>
       </div>
 
-      <div class="location-title">
-        <h2>123 Address Dr.</h2>
-        <!-- <button type="button">View Calendar</button> -->
-      </div>
-      <hr>
+      <div class="location-shifts">
+        <h2>{selectedLocation.address}</h2>
 
-      <div class = "shift">
-        <div class="shift-details">
-          <span class="shift-date">9/28</span>
-          <span class="shift-time">12 PM - 8 PM</span>
-        </div>
-      </div>
+        {#each shiftsInRange as shift}
+          <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+          <div class={["shift", !shift.worker && "shift-unclaimed", shift.canceled && "shift-canceled", shift === selectedShift && "selected"]} onclick={() => toggle(shift)}>
+            <div class="shift-details">
+              <span class="shift-date">{shift.month}/{shift.day}</span>
+              <span class="shift-time">{shift.startTime}:00 a.m. - {shift.endTime-12}:00 p.m.</span>
+            </div>
 
-      <div class = "shift">
-        <div class="shift-details">
-          <span class="shift-date">9/28</span>
-          <span class="shift-time">9 AM - 5 PM</span>
-        </div>
-      </div>
 
-      <div class = "shift selected">
-        <div class="shift-details">
-          <span class="shift-date">9/29</span>
-          <span class="shift-time">8 AM - 4 PM</span>
-        </div>
-        <div class="shift-actions">
-          <button type="button">Edit Job</button>
-          <button type="button">Remove Job</button>
-        </div>
-      </div>
+            <span class="shift-date">{shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
+            <div>
+            {#if shift.worker}
+              <span class="shift-worker">· {shift.worker}</span>
+            {/if}
 
-      <div class = "shift">
-        <div class="shift-details">
-          <span class="shift-date">9/30</span>
-          <span class="shift-time">10 AM - 6 PM</span>
-          <span class="shift-status">Unclaimed</span>
-        </div>
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13.5 3.5C12.8 2.3 11.2 2.3 10.5 3.5L1.3 19.5C0.6 20.7 1.5 22.2 2.9 22.2H21.1C22.5 22.2 23.4 20.7 22.7 19.5L13.5 3.5Z" stroke="#FF0000" stroke-width="1" />
-          <rect x="11" y="8" width="2" height="7" rx="1" fill="#FF0000"/>
-          <circle cx="12" cy="17.5" r="1.2" fill="#FF0000"/>
-        </svg>
-      </div>
+            </div>
 
-      <div class="location-actions">
-        <button type="button">Add Job</button>
-      </div>
 
+            <div class="shift-actions">
+              <div class="shift-warnings">
+                {#if !shift.worker}
+                  <div class="shift-warning">
+                    <WarningIcon />
+                    <span>Unclaimed</span>
+                  </div>
+                {/if}
+                {#if shift.canceled}
+                  <div class="shift-warning">
+                    <WarningIcon />
+                    <span>Canceled</span>
+                  </div>
+                {/if}
+              </div>
+
+              <div class="shift-buttons">
+                {#if shift === selectedShift}
+                  <button type="button" onclick={(event) => {event.stopPropagation();clickedEditJob();}}>Edit Shift</button>
+                  <button type="button" onclick={(event) => {event.stopPropagation(); removeShift(shift);}}>Remove Shift</button>
+                {/if}
+              </div>
+            </div>
+          </div>
+        {/each}
+      </div>
     </div>
 
-    <div class="donut-charts">
-    
-      <div class = "chart">
-        <h2>Punctuality </h2>
-        <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
-          <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
-          <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="85 15" stroke-dashoffset="25"></circle>
-          <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
-            85%
-          </text>
-        </svg>
-      </div>
-
-      <div class = "chart">
-        <h2>Attendance  </h2>
-        <svg width="100%" height="100%" viewBox="0 0 42 42" class="donut">
-          <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
-          <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
-          <circle class="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="purple" stroke-width="3" stroke-dasharray="66 34" stroke-dashoffset="25"></circle>
-          <text x="21" y="21" text-anchor="middle" dominant-baseline="central" font-size="6">
-            66%
-          </text>
-        </svg>
-      </div>
-
+    <div class="roster">
+      <h2>Roster<hr></h2>
+      {#each roster as worker}
+        <div class="worker-card">{worker.name}
+            <div class="worker-info">
+              <span class = "job-title">{worker.role.charAt(0).toUpperCase()+ worker.role.slice(1)} - </span>
+              <span title="Punctuality">Punctuality {worker.punctuality}% - </span>
+              <span title="Attendance">Attendance {worker.attendance}%</span>
+            </div>
+        </div>
+      {/each}
+      <button type="button" onclick={gotoRoster}>View Full Roster</button>
     </div>
-
   </div>
 
-</main>
-
+  </main>
+ 
 
 <style>
   main {
@@ -128,16 +176,13 @@
     padding-left: 2rem;
     padding-right: 2rem;
     margin: 0;
-    color: purple;
+    color: #4D148C;
   }
 
-
-  /* .filters {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  } */
+  .worker-info {
+    color: #6f6578;
+    font-size: 1rem;
+  }
 
   .filters {
     display: flex;
@@ -161,7 +206,11 @@
     margin: 0;
     padding: 0;
   }
-
+    @media (max-width: 800px) {
+      .main-layout {
+        flex-direction: column;
+      }
+  }
   .main-layout {
     display: flex;
     gap: 4rem;
@@ -171,9 +220,28 @@
   }
 
   .shift {
-    display: flex;
+    display: grid;
     align-items: center;
-    justify-content: space-between;
+    grid-template-columns: auto auto 1fr max-content;
+    justify-content:space-between;
+    gap: 1rem;
+
+    background-color: #f6f3f8;
+    border: 1px solid #dcd5e2;
+    border-radius: 8px;
+    padding: 14px 20px;
+    min-height: 56px;
+    box-sizing: border-box;
+    font-family: system-ui, sans-serif;
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: #302738;
+  }
+
+  .worker-card {
+    display: flex;
+    /* align-items: center; */
+    justify-content:space-between;
     gap: 1rem;
 
     background-color: #f6f3f8;
@@ -190,8 +258,8 @@
 
   .shift.selected {
     background-color: #ece3f3;
-    border: 1px solid purple;
-    box-shadow: 0 0 0 1px purple;
+    border: 1px solid #4D148C;
+    box-shadow: 0 0 0 1px #4D148C;
   }
 
   .shift-details {
@@ -208,47 +276,75 @@
 
   .shift-time {
     font-weight: 600;
-    color: purple;
-  }
-
-  .shift-status {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #b42318;
-  }
-
-  .shift svg {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
+    color: #4D148C;
   }
 
   .shift-actions {
     display: flex;
-    gap: 0.5rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
     flex-shrink: 0;
   }
 
-  .shift-actions button {
-    padding: 0.4rem 0.9rem;
-    font: inherit;
+  .shift-warnings,
+  .shift-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .shift-warning {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .shift-warning svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .shift-buttons button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .shift-worker {
     font-size: 1rem;
+    color:#302738;
+  }
+
+  .shift-unclaimed .shift-status,
+  .shift-unclaimed .shift-actions {
+    color:#FF6600;
+  }
+
+  .shift-canceled .shift-status,    
+  .shift-canceled .shift-actions {
+  color: red;
+  }
+
+  .shift-actions button {
+    padding: 0.25rem 0.5rem;
+    font: inherit;
+    font-size: 0.8rem;
     cursor: pointer;
   }
 
-  .location-title {
-    display: flex;
-    align-items: center;
-    justify-content:left;
-    gap: 1rem;
-    margin-top: 0.5rem;
-  }
-
-  .location-title h2 {
-    margin: 0;
-  }
-
   .location-shifts {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .roster {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -256,39 +352,19 @@
     min-width: 0;
   }
 
-  .location-shifts > hr {
-    margin: 0;
-  }
-
-  .location-actions {
-    display: flex;
-    gap: 1rem;
+  .roster button {
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    margin-top: 1rem;
   }
 
   .filters input,
   .filters select,
-  .location-actions button {
+  .filters button {
     padding: 0.5rem 1rem;
     font: inherit;
     cursor: pointer;
-  }
-
-  .donut-charts {
-    flex: 1;
-    display: flex;
-    /* flex-direction: column; */
-    justify-content: space-around;
-    min-width: 0;
-  }
-
-  .chart {
-    text-align: center;
-  }
-
-  .donut {
-    width: 150px;
-    max-width: 100%;
-    height: auto;
   }
 
 </style>

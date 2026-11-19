@@ -1,27 +1,48 @@
 <script>
+  import { goto } from "$app/navigation";
+  import { resolve } from '$app/paths';
+
+
+  let userCredential = $state("");
+  let passCredential = $state("");
+
+  function login() {
+    if (userCredential === 'manager' && passCredential === 'password') {
+      goto(resolve('/manager'));
+    } else if (userCredential === 'worker' && passCredential === 'password') {
+      goto(resolve('/worker'));
+    }
+  }
 
 </script>
 
 
 <main>
-  <div class = "login-form">
+  <form
+    class="login-form"
+    onsubmit={(event) => {
+      event.preventDefault();
+      login();
+    }}
+  >
     <h1>Login</h1>
     <div>
-      <label for="Email">Email:</label><br>
-      <input type="text" id="Email" name="Email"><br><br>
+      <label for="username">Username:</label><br>
+      <input bind:value={userCredential} type="text" id="username" name="username"><br><br>
     </div>
     <div>
       <label for="password">Password:</label><br>
-      <input type="text" id="password" name="password"><br><br>
+      <input bind:value={passCredential} type="text" id="password" name="password"><br><br>
     </div>
 
-    <input type="button" class = "button" value="Login"> <br>
-  </div>
+    <!-- <input type="button" class = "button" value="Login">  -->
+    <button type="submit" class="button"> log in </button> <br>
+  </form>
 
   <!-- temp navigation -->
-  <a href="/worker">Go to worker dashboard</a> <br/>
-  <a href="/manager">Go to manager dashboard</a>
-  <a href="/manager/roster">Go to manager roster</a>
+  <!-- <a href="/worker">Go to worker dashboard</a> <br/> -->
+  <!-- <a href="/manager">Go to manager dashboard</a> -->
+  
 </main>
 
 <style>
