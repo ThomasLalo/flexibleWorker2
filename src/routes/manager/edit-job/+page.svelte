@@ -48,12 +48,15 @@
 
     const location = locations.find(item => item.address === loc);
     const indexParam = params.get("index");
+    if (indexParam === null) return;
     const index = indexParam !== null && /^\d+$/.test(indexParam) ? Number(indexParam) : -1;
     const shift = Number.isSafeInteger(index) && index >= 0 ? location?.shifts[index] : undefined;
     if (!shift) {
       error = "The selected shift could not be found. Return to the dashboard and choose a shift.";
       return;
     }
+    const year = startDate?.getFullYear() ?? endDate?.getFullYear() ?? new Date().getFullYear();
+    selectDay({ year, month: shift.month, day: shift.day });
     selectShift(shift);
   });
 
@@ -98,9 +101,10 @@
 </script>
 
 <JobShared {selectedLocation} bind:sd bind:ed bind:st bind:et {clearFilters}
+  pageError={!selectedDay ? error : ''}
   bind:selectedDay={() => selectedDay, selectDay}
   bind:selectedShift={() => selectedShift, selectShift}>
-  <h1>Edit Shift</h1>
+  <h2>Edit Shift</h2>
   {#if error}<p role="alert">{error}</p>{/if}
   {#if selectedShift}
     <form class="edit-form" onsubmit={saveShift}>

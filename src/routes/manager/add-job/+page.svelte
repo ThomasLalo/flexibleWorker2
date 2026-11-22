@@ -20,6 +20,7 @@
   function selectDay(day: CalendarDay | null) {
     selectedDay = day;
     selectedShift = null;
+    error = "";
     if (day) {
       newDate = `${day.year}-${String(day.month).padStart(2, '0')}-${String(day.day).padStart(2, '0')}`;
     }
@@ -88,12 +89,10 @@
 
 </script>
 
-<!-- I'm not sure where the codepen for this form ended up -->
-
 <JobShared {selectedLocation} bind:sd bind:ed bind:st bind:et {clearFilters}
   bind:selectedDay={() => selectedDay, selectDay}
   bind:selectedShift>
-  <h1>Add Shift</h1>
+  <h2>Add Shift</h2>
 
   {#if error}<p role="alert">{error}</p>{/if}
   {#if selectedLocation}

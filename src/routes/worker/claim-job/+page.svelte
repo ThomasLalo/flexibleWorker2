@@ -49,114 +49,13 @@
 
 </script>
 
-<!-- I'm not sure where the codepen for this form ended up -->
-
 <JobShared {selectedLocation} bind:sd bind:ed bind:st bind:et {clearFilters} {worker} {role}
   bind:selectedDay={() => selectedDay, selectDay}
   bind:selectedShift>
-  <h1>Claim Shift</h1>
+  <h2>Claim Shift</h2>
 
-  <!-- <h3>Job description: </h3>
-  <p class="job-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus eget dignissim eros. Quisque magna dolor, rhoncus in lacinia in, volutpat in sem. Suspendisse iaculis pretium felis quis consequat. Cras eget condimentum neque, non molestie nulla. Vivamus vitae luctus magna.</p>
-  <h3>Requirements: </h3>
-  <p>CDL</p>
-  <h3>Location: </h3>
-  <p>123 Address Dr</p>
-
-  <h3>Claim 9-5 shift on September 29? </h3> -->
-  <button type="button" onclick={claimShift}>confirm</button>
+  <button type="button" onclick={claimShift}
+    disabled={!selectedShift || Boolean(selectedShift.worker) || selectedShift.canceled}>
+    Claim shift
+  </button>
 </JobShared>
-
-
-<style>
-  /* .calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    max-width: 700px;
-  }
-
-  .label {
-    font-weight: bold;
-    text-align: center;
-    padding-bottom: 4px;
-  }
-
-  .day {
-    aspect-ratio: 1;
-    padding: 4px;
-    border: 1px solid purple;
-    border-radius: 4px;
-  }
-
-  .day:hover {
-    background-color: purple;
-    color: white;
-  }
-
-  .day.empty {
-    border: none;
-  }
-
-  .day.empty:hover {
-    background-color: white;
-  }
-
-  .shift {
-    background-color: orange;
-    text-align: center;
-    padding: 4px;
-    border-radius: 4px;
-    cursor: pointer;
-    position: relative;
-    margin-top: 2px;
-  }
-
-  .shift-tooltip {
-    visibility: hidden;
-    position: absolute;
-    top: 50%;
-    left: 110%;
-    transform: translateY(-50%);
-    z-index: 1;
-    background-color: white;
-    color: black;
-    padding: 4px 4px;
-    border-radius: 4px;
-    border: 1px solid black;
-    width: 200px;
-  }
-
-  .shift-tooltip::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: -5px;
-    width: 10px;
-    height: 10px;
-    box-sizing: border-box;
-    background-color: inherit;
-    border-left: inherit;
-    border-bottom: inherit;
-    transform: translateY(-50%) rotate(45deg);
-  }
-
-  .shift:hover .shift-tooltip {
-    visibility: visible;
-  }
-
-  .selected-day {
-    background-color: purple;
-    color: white;
-  }
-
-  .selected-shift {
-    background-color: white;
-    color: black;
-  } */
-
-  .job-description {
-    max-width: 45ch;
-  }
-
-</style>
