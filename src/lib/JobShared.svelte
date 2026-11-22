@@ -31,32 +31,33 @@
 
   let {
     selectedLocation,
-    sd = $bindable(""),
-    ed = $bindable(""),
-    st = $bindable(""),
-    et = $bindable(""),
+    dashboardFilters = null,
+    calendarDate = null,
     selectedDay = $bindable(null),
     selectedShift = $bindable(null),
-    clearFilters,
     worker,
     role,
     pageError = "",
     children
   }: {
     selectedLocation: Location | undefined;
-    sd?: string;
-    ed?: string;
-    st?: string;
-    et?: string;
+    dashboardFilters?: ReturnType<typeof readJobFilters> | null;
+    calendarDate?: Date | null;
     selectedDay?: CalendarDay | null;
     selectedShift?: Shift | null;
-    clearFilters: () => void;
     worker?: string;
     role?: string;
     pageError?: string;
     children: Snippet;
   } = $props();
 
+  // Dashboard values remain a preset until the user explicitly applies them.
+  let sd = $state("");
+  let ed = $state("");
+  let st = $state("");
+  let et = $state("");
+  let roleFilter = $state("");
+  let dashboardFiltersApplied = $state(false);
   let dialog: HTMLDialogElement;
 
   $effect(() => {
@@ -69,8 +70,25 @@
     selectedShift = null;
   }
 
-  // A worker is supplied only by claim-job, the manager pages show all roles
+  function applyDashboardFilters() {
+    if (!dashboardFilters) return;
+    ({ sd, ed, st, et } = dashboardFilters);
+    dashboardFiltersApplied = true;
+    closeDay();
+  }
+
+  function clearFilters() {
+    sd = ed = st = et = roleFilter = "";
+    closeDay();
+  }
+
+  // Claim-job always restricts shifts to the worker's role.
   const isClaimPage = $derived(worker !== undefined);
+  const hasDashboardFilters = $derived(Boolean(
+    dashboardFilters && (dashboardFilters.sd || dashboardFilters.ed || dashboardFilters.st || dashboardFilters.et)
+  ));
+  const dashboardDate = $derived(dashboardFilters?.sd || dashboardFilters?.ed);
+  const initialDate = $derived(calendarDate ?? (dashboardDate ? new Date(dashboardDate + "T00:00") : null));
 
   // new Date("" + "T00:00") would cause an error
   const startDate = $derived(sd ? new Date(sd + "T00:00") : null);
@@ -78,7 +96,7 @@
   // parseInt("") === NaN
   const startHour = $derived(st ? parseInt(st) : null);
   const endHour = $derived(et ? parseInt(et) : null);
-  const hasFilters = $derived(Boolean(sd || ed || st || et));
+  const hasFilters = $derived(Boolean(sd || ed || st || et || (!isClaimPage && roleFilter)));
   const invalidDateRange = $derived(Boolean(sd && ed && sd > ed));
   const invalidTimeRange = $derived(
     startHour !== null && endHour !== null && startHour > endHour
@@ -87,7 +105,7 @@
   const shiftsInRange: Shift[] = $derived(
     selectedLocation?.shifts.filter(shift => {
       const year = startDate?.getFullYear() ??
-        endDate?.getFullYear() ?? new Date().getFullYear();
+        endDate?.getFullYear() ?? initialDate?.getFullYear() ?? new Date().getFullYear();
       const date = new Date(year, shift.month - 1, shift.day);
       return (
         // if null give true since that part of the filter does not apply
@@ -95,7 +113,7 @@
         (!endDate || date <= endDate) &&
         (startHour === null || shift.startTime >= startHour) &&
         (endHour === null || shift.endTime <= endHour) &&
-        (!isClaimPage || shift.role == role)
+        (isClaimPage ? shift.role === role : !roleFilter || shift.role === roleFilter)
       );
     }) ?? []
   );
@@ -145,13 +163,34 @@
       {/if}
 
       <div class="filters">
+        {#if hasDashboardFilters && dashboardFilters && !dashboardFiltersApplied}
+          <div class="dashboard-preset">
+            <strong>Dashboard selection</strong>
+            <div class="filter-summary">
+              {#if dashboardFilters.sd || dashboardFilters.ed}
+                <span>
+                  {#if dashboardFilters.sd}From {formatDate(dashboardFilters.sd)}{/if}
+                  {#if dashboardFilters.ed}{dashboardFilters.sd ? 'through' : 'Through'} {formatDate(dashboardFilters.ed)}{/if}
+                </span>
+              {/if}
+              {#if dashboardFilters.st || dashboardFilters.et}
+                <span>
+                  {#if dashboardFilters.st}Starting at or after {formatTime(dashboardFilters.st)}{/if}
+                  {#if dashboardFilters.et}{dashboardFilters.st ? 'and ending' : 'Ending'} by {formatTime(dashboardFilters.et)}{/if}
+                </span>
+              {/if}
+            </div>
+            <button type="button" onclick={applyDashboardFilters}>Apply dashboard filters</button>
+          </div>
+        {/if}
         <details>
           <summary>
-            <strong>Filter by date and time</strong>
+            <strong>{isClaimPage ? 'Filter by date and time' : 'Filter by date, time, and role'}</strong>
             <span class="filter-summary">
               {#if !hasFilters}
-                All dates and times
+                {isClaimPage ? 'All dates and times' : 'All dates, times, and roles'}
               {:else}
+                {#if !sd && !ed && !st && !et}<span>All dates and times</span>{/if}
                 {#if sd || ed}
                   <span>
                     {#if sd}From {formatDate(sd)}{/if}
@@ -163,6 +202,9 @@
                     {#if st}Starting at or after {formatTime(st)}{/if}
                     {#if et}{st ? 'and ending' : 'Ending'} by {formatTime(et)}{/if}
                   </span>
+                {/if}
+                {#if !isClaimPage}
+                  <span>{roleFilter ? (roleFilter === 'handler' ? 'Handler' : 'Courier') : 'All roles'}</span>
                 {/if}
                 {#if invalidDateRange || invalidTimeRange}
                   <span class="filter-error">Check the range below.</span>
@@ -176,10 +218,10 @@
               <legend>Date Range</legend>
               <div class="filter-range">
                 <input type="date" aria-label="Start date" bind:value={sd}
-                  onchange={() => { selectedDay = null; }} />
+                  onchange={closeDay} />
                 <span class="range-separator">-</span>
                 <input type="date" aria-label="End date" bind:value={ed}
-                  onchange={() => { selectedDay = null; }} />
+                  onchange={closeDay} />
               </div>
               {#if invalidDateRange}
                 <p class="filter-error">End date must be on or after the start date.</p>
@@ -190,15 +232,26 @@
               <legend>Time Range</legend>
               <div class="filter-range">
                 <input type="time" aria-label="Start time" bind:value={st}
-                  onchange={() => { selectedDay = null; }} />
+                  onchange={closeDay} />
                 <span class="range-separator">-</span>
                 <input type="time" aria-label="End time" bind:value={et}
-                  onchange={() => { selectedDay = null; }} />
+                  onchange={closeDay} />
               </div>
               {#if invalidTimeRange}
                 <p class="filter-error">End time must not be before the start time.</p>
               {/if}
             </fieldset>
+
+            {#if !isClaimPage}
+              <fieldset>
+                <legend>Role</legend>
+                <select aria-label="Filter by role" bind:value={roleFilter} onchange={closeDay}>
+                  <option value="">All roles</option>
+                  <option value="handler">Handler</option>
+                  <option value="courier">Courier</option>
+                </select>
+              </fieldset>
+            {/if}
 
             <button type="button" aria-label="clear filters" onclick={clearFilters}
               disabled={!hasFilters}>
@@ -212,7 +265,7 @@
     </div>
 
     <p>Select a day to view shifts and continue.</p>
-    <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate}
+    <Calender {claimedShifts} {unclaimedShifts} {startDate} {endDate} {initialDate}
       bind:selectedDay bind:selectedShift/>
   </div>
 
@@ -377,6 +430,16 @@
     border-top: 1px solid #dcd5e2;
   }
 
+  .dashboard-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #dcd5e2;
+  }
+
   .filters fieldset {
     min-width: 0;
     margin: 0;
@@ -397,7 +460,8 @@
     gap: 0.75rem;
   }
 
-  .filters input {
+  .filters input,
+  .filters select {
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
@@ -430,6 +494,7 @@
   }
 
   .filters input:focus-visible,
+  .filters select:focus-visible,
   .filters button:focus-visible,
   .filters summary:focus-visible {
     outline: 2px solid #4D148C;

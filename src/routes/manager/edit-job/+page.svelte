@@ -22,7 +22,7 @@
     error = "";
     if (!shift) return;
 
-    const year = startDate?.getFullYear() ?? endDate?.getFullYear() ?? new Date().getFullYear();
+    const year = selectedDay?.year ?? calendarDate?.getFullYear() ?? new Date().getFullYear();
     editDate = `${year}-${String(shift.month).padStart(2, '0')}-${String(shift.day).padStart(2, '0')}`;
     editStartTime = `${String(shift.startTime).padStart(2, '0')}:00`;
     editEndTime = `${String(shift.endTime).padStart(2, '0')}:00`;
@@ -36,15 +36,14 @@
 
   // Initialize in a way that doesn't read URL data immediately
   let loc = $state<string | null>(null);
-  let sd = $state("");
-  let ed = $state("");
-  let st = $state("");
-  let et = $state("");
+  let dashboardFilters = $state<ReturnType<typeof readJobFilters> | null>(null);
+  let calendarDate = $state<Date | null>(null);
 
   // Read the URL in the browser, after the page mounts
   onMount(() => {
     const params = page.url.searchParams;
-    ({ loc, sd, ed, st, et } = readJobFilters(params));
+    dashboardFilters = readJobFilters(params);
+    loc = dashboardFilters.loc;
 
     const location = locations.find(item => item.address === loc);
     const indexParam = params.get("index");
@@ -55,16 +54,14 @@
       error = "The selected shift could not be found. Return to the dashboard and choose a shift.";
       return;
     }
-    const year = startDate?.getFullYear() ?? endDate?.getFullYear() ?? new Date().getFullYear();
+    const dashboardDate = dashboardFilters.sd || dashboardFilters.ed;
+    const year = dashboardDate ? new Date(dashboardDate + "T00:00").getFullYear() : new Date().getFullYear();
+    calendarDate = new Date(year, shift.month - 1, shift.day);
     selectDay({ year, month: shift.month, day: shift.day });
     selectShift(shift);
   });
 
   const selectedLocation = $derived(locations.find(item => item.address === loc));
-
-  // Used when filling the edit form for a selected shift.
-  let startDate = $derived(sd ? new Date(sd + "T00:00") : null);
-  let endDate = $derived(ed ? new Date(ed + "T00:00") : null);
 
   function saveShift(event: SubmitEvent) {
     event.preventDefault();
@@ -93,14 +90,9 @@
     goto(resolve('/manager'));
   }
 
-  function clearFilters() {
-  sd = ed = st = et = "";
-  selectDay(null);
-}
-
 </script>
 
-<JobShared {selectedLocation} bind:sd bind:ed bind:st bind:et {clearFilters}
+<JobShared {selectedLocation} {dashboardFilters} {calendarDate}
   pageError={!selectedDay ? error : ''}
   bind:selectedDay={() => selectedDay, selectDay}
   bind:selectedShift={() => selectedShift, selectShift}>

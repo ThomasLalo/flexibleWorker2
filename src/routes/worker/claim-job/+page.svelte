@@ -22,15 +22,13 @@
   );
   
   let loc = $state<string | null>(null);
-  let sd = $state("");
-  let ed = $state("");
-  let st = $state("");
-  let et = $state("");
+  let dashboardFilters = $state<ReturnType<typeof readJobFilters> | null>(null);
 
   // Read the URL in the browser, after the page mounts.
   onMount(() => {
     const params = page.url.searchParams;
-    ({ loc, sd, ed, st, et } = readJobFilters(params));
+    dashboardFilters = readJobFilters(params);
+    loc = dashboardFilters.loc;
   });
 
   const selectedLocation = $derived(locations.find(item => item.address === loc));
@@ -42,14 +40,9 @@
     }
   };
 
-  function clearFilters() {
-    sd = ed = st = et = "";
-    selectDay(null);
-  }
-
 </script>
 
-<JobShared {selectedLocation} bind:sd bind:ed bind:st bind:et {clearFilters} {worker} {role}
+<JobShared {selectedLocation} {dashboardFilters} {worker} {role}
   bind:selectedDay={() => selectedDay, selectDay}
   bind:selectedShift>
   <h2>Claim Shift</h2>

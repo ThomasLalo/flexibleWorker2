@@ -28,18 +28,16 @@
 
   // Initialize in a way that doesn't read URL data immediately
   let loc = $state<string | null>(null);
-  let sd = $state("");
-  let ed = $state("");
-  let st = $state("");
-  let et = $state("");
+  let dashboardFilters = $state<ReturnType<typeof readJobFilters> | null>(null);
 
   // Read the URL in the browser, after the page mounts
   onMount(() => {
     const params = page.url.searchParams;
-    ({ loc, sd, ed, st, et } = readJobFilters(params));
-    newDate = sd;
-    newStartTime = st || "09:00";
-    newEndTime = et || "17:00";
+    dashboardFilters = readJobFilters(params);
+    loc = dashboardFilters.loc;
+    newDate = dashboardFilters.sd;
+    newStartTime = dashboardFilters.st || "09:00";
+    newEndTime = dashboardFilters.et || "17:00";
     if (!locations.some(item => item.address === loc)) {
       error = "Choose a location on the manager dashboard before adding a shift.";
     }
@@ -82,14 +80,9 @@
     goto(resolve('/manager'));
   }
 
-  function clearFilters() {
-  sd = ed = st = et = "";
-  selectedDay = null;
-}
-
 </script>
 
-<JobShared {selectedLocation} bind:sd bind:ed bind:st bind:et {clearFilters}
+<JobShared {selectedLocation} {dashboardFilters}
   bind:selectedDay={() => selectedDay, selectDay}
   bind:selectedShift>
   <h2>Add Shift</h2>
