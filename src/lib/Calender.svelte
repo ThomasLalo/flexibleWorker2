@@ -117,7 +117,7 @@ function isInRange(day: number): boolean {
         {#each dayShifts.slice(0, 3) as shift (shift)}
             <span class="shift" class:claimed={Boolean(shift.worker)}
                 class:selected={shift === selectedShift}>
-                {shift.startTime}:00–{shift.endTime}:00
+                {shift.startTime}:00-{shift.endTime-12}:00
             </span>
         {/each}
 

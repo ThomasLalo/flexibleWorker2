@@ -16,6 +16,7 @@
   let newEndTime = $state("");
   let newRole = $state("handler");
   let error = $state("");
+  let numberOfShifts = $state(1);
 
   function selectDay(day: CalendarDay | null) {
     selectedDay = day;
@@ -63,14 +64,16 @@
       error = "Choose a handler or courier role.";
       return;
     }
+    for (let i = 0; i < numberOfShifts; i++) {
+      selectedLocation.shifts.push({
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+        startTime: start,
+        endTime: end,
+        role: newRole
+      });
+    }
 
-    selectedLocation.shifts.push({
-      month: date.getMonth() + 1,
-      day: date.getDate(),
-      startTime: start,
-      endTime: end,
-      role: newRole
-    });
     selectedLocation.shifts.sort((a, b) =>
       a.month - b.month ||
       a.day - b.day ||
@@ -99,6 +102,9 @@
           <option value="handler">Handler</option>
           <option value="courier">Courier</option>
         </select>
+      </label>
+      <label>Number of shifts 
+        <input type="number" min="1" bind:value={numberOfShifts} required />
       </label>
       <button type="submit">Add shift</button>
     </form>

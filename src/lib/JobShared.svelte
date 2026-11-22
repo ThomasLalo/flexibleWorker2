@@ -35,6 +35,8 @@
     calendarDate = null,
     selectedDay = $bindable(null),
     selectedShift = $bindable(null),
+    multiple = false,
+    selectedShifts = $bindable([]),
     worker,
     role,
     pageError = "",
@@ -45,6 +47,8 @@
     calendarDate?: Date | null;
     selectedDay?: CalendarDay | null;
     selectedShift?: Shift | null;
+    multiple?: boolean;
+    selectedShifts?: Shift[];
     worker?: string;
     role?: string;
     pageError?: string;
@@ -68,6 +72,7 @@
   function closeDay() {
     selectedDay = null;
     selectedShift = null;
+    selectedShifts = [];
   }
 
   function applyDashboardFilters() {
@@ -134,6 +139,20 @@
         )
       : [];
   });
+
+  const matchingShifts = $derived.by(() => {
+    const first = selectedShifts[0];
+    return first ? shiftsForSelectedDay.filter(shift =>
+      shift.startTime === first.startTime && shift.endTime === first.endTime &&
+      shift.role === first.role
+    ) : [];
+  });
+
+  function toggleShift(shift: Shift, checked: boolean) {
+    selectedShifts = checked
+      ? [...selectedShifts, shift]
+      : selectedShifts.filter(item => item !== shift);
+  }
 
   function formatTime(time: string) {
     if (!time) return "";
@@ -278,23 +297,53 @@
     </div>
     <div class="dialog-content">
       <div class="day-shift-list">
+        {#if multiple && shiftsForSelectedDay.length}
+          <div class="selection-controls">
+            <label>
+              <input type="checkbox"
+                checked={selectedShifts.length === shiftsForSelectedDay.length}
+                indeterminate={selectedShifts.length > 0 && selectedShifts.length < shiftsForSelectedDay.length}
+                onchange={event => selectedShifts = event.currentTarget.checked ? [...shiftsForSelectedDay] : []} />
+              Select all shifts on this day
+            </label>
+            <span aria-live="polite">{selectedShifts.length} selected</span>
+            <button type="button" disabled={!selectedShifts.length}
+              onclick={() => selectedShifts = matchingShifts}>
+              Select matching shifts
+            </button>
+            <small>Matches the first selected shift's date, start time, end time, and role.</small>
+          </div>
+        {/if}
         {#each shiftsForSelectedDay as shift (shift)}
+          {#snippet shiftDetails()}
+            <span class="shift-heading">{formatTime(`${shift.startTime}:00`)}–{formatTime(`${shift.endTime}:00`)} - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
+            <span class="shift-status">{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
+            {#if shift.canceled}<span class="shift-canceled">Canceled</span>{/if}
+          {/snippet}
+          {#if multiple}
+            <label class="shift-option shift-checkbox"
+              class:claimed={Boolean(shift.worker)}
+              class:selected={selectedShifts.includes(shift)}>
+              <input type="checkbox" checked={selectedShifts.includes(shift)}
+                onchange={event => toggleShift(shift, event.currentTarget.checked)} />
+              <span class="shift-details">{@render shiftDetails()}</span>
+            </label>
+          {:else}
           <button type="button" class="shift-option"
             class:claimed={Boolean(shift.worker)}
             class:selected={shift === selectedShift}
             aria-pressed={shift === selectedShift}
             onclick={() => selectedShift = shift}>
-            <span class="shift-heading">{shift.startTime}:00-{shift.endTime}:00 - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
-            <span class="shift-status">{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
-            {#if shift.canceled}<span class="shift-canceled">Canceled</span>{/if}
+            {@render shiftDetails()}
           </button>
+          {/if}
         {:else}
           <p>No matching shifts on this day.</p>
         {/each}
       </div>
 
       <div class="day-form">
-        {#if selectedShift}
+        {#if selectedShift && !multiple}
           <p>
             Selected: {selectedShift.month}/{selectedShift.day},
             {selectedShift.startTime}:00-{selectedShift.endTime}:00
@@ -522,6 +571,41 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .selection-controls,
+  .shift-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .selection-controls {
+    margin-bottom: 0.5rem;
+  }
+
+  .selection-controls button {
+    padding: 0.5rem;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .selection-controls small {
+    color: #62596b;
+  }
+
+  .shift-option.shift-checkbox {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .shift-checkbox input,
+  .selection-controls input {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+    accent-color: #4D148C;
   }
 
   .shift-option {

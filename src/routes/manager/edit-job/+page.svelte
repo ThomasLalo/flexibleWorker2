@@ -10,28 +10,32 @@
 
 
   let selectedDay = $state<CalendarDay | null>(null);
-  let selectedShift = $state<Shift | null>(null);
+  let selectedShifts = $state<Shift[]>([]);
   let editDate = $state("");
   let editStartTime = $state("");
   let editEndTime = $state("");
   let editRole = $state("handler");
   let error = $state("");
 
-  function selectShift(shift: Shift | null) {
-    selectedShift = shift;
+  function selectShifts(shifts: Shift[]) {
+    selectedShifts = shifts;
     error = "";
+    const shift = shifts[0];
     if (!shift) return;
 
     const year = selectedDay?.year ?? calendarDate?.getFullYear() ?? new Date().getFullYear();
-    editDate = `${year}-${String(shift.month).padStart(2, '0')}-${String(shift.day).padStart(2, '0')}`;
-    editStartTime = `${String(shift.startTime).padStart(2, '0')}:00`;
-    editEndTime = `${String(shift.endTime).padStart(2, '0')}:00`;
-    editRole = shift.role;
+    editDate = shifts.every(item => item.month === shift.month && item.day === shift.day)
+      ? `${year}-${String(shift.month).padStart(2, '0')}-${String(shift.day).padStart(2, '0')}` : "";
+    editStartTime = shifts.every(item => item.startTime === shift.startTime)
+      ? `${String(shift.startTime).padStart(2, '0')}:00` : "";
+    editEndTime = shifts.every(item => item.endTime === shift.endTime)
+      ? `${String(shift.endTime).padStart(2, '0')}:00` : "";
+    editRole = shifts.every(item => item.role === shift.role) ? shift.role : "";
   }
 
   function selectDay(day: CalendarDay | null) {
     selectedDay = day;
-    selectShift(null);
+    selectShifts([]);
   }
 
   // Initialize in a way that doesn't read URL data immediately
@@ -58,61 +62,85 @@
     const year = dashboardDate ? new Date(dashboardDate + "T00:00").getFullYear() : new Date().getFullYear();
     calendarDate = new Date(year, shift.month - 1, shift.day);
     selectDay({ year, month: shift.month, day: shift.day });
-    selectShift(shift);
+    selectShifts([shift]);
   });
 
   const selectedLocation = $derived(locations.find(item => item.address === loc));
 
   function saveShift(event: SubmitEvent) {
     event.preventDefault();
-    const shift = selectedShift;
-    if (!shift || !selectedLocation?.shifts.includes(shift)) {
-      error = "Choose a shift to edit.";
+    error = "";
+    if (!selectedShifts.length || !selectedLocation ||
+        selectedShifts.some(shift => !selectedLocation.shifts.includes(shift))) {
+      error = "Choose shifts to edit.";
       return;
     }
 
-    const times = validateShiftTime(editDate, editStartTime, editEndTime);
-    if (!times) {
-      error = "Choose a date and whole-hour times, with the end after the start.";
+    if (editRole && editRole !== "handler" && editRole !== "courier") {
+      error = "Choose a handler or courier role.";
       return;
     }
-    const { date, start, end } = times;
 
-    const scheduleChanged = shift.month !== date.getMonth() + 1 ||
-      shift.day !== date.getDate() || shift.startTime !== start || shift.endTime !== end;
+    // Validate every resulting schedule before mutating any shift.
+    const year = selectedDay?.year ?? new Date().getFullYear();
+    const updates = selectedShifts.map(shift => ({
+      shift,
+      times: validateShiftTime(
+        editDate || `${year}-${String(shift.month).padStart(2, '0')}-${String(shift.day).padStart(2, '0')}`,
+        editStartTime || `${String(shift.startTime).padStart(2, '0')}:00`,
+        editEndTime || `${String(shift.endTime).padStart(2, '0')}:00`
+      )
+    }));
+    if (updates.some(update => !update.times)) {
+      error = "Every selected shift must have whole-hour times, with the end after the start. No changes were saved.";
+      return;
+    }
 
-    shift.month = date.getMonth() + 1;
-    shift.day = date.getDate();
-    shift.startTime = start;
-    shift.endTime = end;
-    shift.role = editRole;
-    if (scheduleChanged) shift.timeChanged = true;
+    for (const { shift, times } of updates) {
+      if (!times) continue;
+      const { date, start, end } = times;
+      const scheduleChanged = shift.month !== date.getMonth() + 1 ||
+        shift.day !== date.getDate() || shift.startTime !== start || shift.endTime !== end;
+
+      shift.month = date.getMonth() + 1;
+      shift.day = date.getDate();
+      shift.startTime = start;
+      shift.endTime = end;
+      if (editRole) shift.role = editRole;
+      if (scheduleChanged) shift.timeChanged = true;
+    }
     goto(resolve('/manager'));
   }
 
 </script>
 
 <JobShared {selectedLocation} {dashboardFilters} {calendarDate}
+  multiple
   pageError={!selectedDay ? error : ''}
   bind:selectedDay={() => selectedDay, selectDay}
-  bind:selectedShift={() => selectedShift, selectShift}>
-  <h2>Edit Shift</h2>
+  bind:selectedShifts={() => selectedShifts, selectShifts}>
+  <h2>{selectedShifts.length > 1 ? `Edit ${selectedShifts.length} Shifts` : 'Edit Shift'}</h2>
   {#if error}<p role="alert">{error}</p>{/if}
-  {#if selectedShift}
+  {#if selectedShifts.length}
+    {#if selectedShifts.length > 1}
+      <p>Shared values are filled in. Blank fields keep each shift's current value.
+        Changes apply to all {selectedShifts.length} selected shifts.</p>
+    {/if}
     <form class="edit-form" onsubmit={saveShift}>
-      <label>Date <input type="date" bind:value={editDate} required /></label>
-      <label>Start time <input type="time" bind:value={editStartTime} step="3600" required /></label>
-      <label>End time <input type="time" bind:value={editEndTime} step="3600" required /></label>
+      <label>Date <input type="date" bind:value={editDate} required={selectedShifts.length === 1} /></label>
+      <label>Start time <input type="time" bind:value={editStartTime} step="3600" required={selectedShifts.length === 1} /></label>
+      <label>End time <input type="time" bind:value={editEndTime} step="3600" required={selectedShifts.length === 1} /></label>
       <label>Role
         <select bind:value={editRole}>
+          {#if selectedShifts.length > 1}<option value="">Keep each shift's role</option>{/if}
           <option value="handler">Handler</option>
           <option value="courier">Courier</option>
         </select>
       </label>
-      <button type="submit">Save changes</button>
+      <button type="submit">{selectedShifts.length > 1 ? `Save changes to ${selectedShifts.length} shifts` : 'Save changes'}</button>
     </form>
   {:else if !error}
-    <p>Select a shift to edit.</p>
+    <p>Select one or more shifts to edit. Selecting shifts fills in the form with their shared values.</p>
   {/if}
 </JobShared>
 
