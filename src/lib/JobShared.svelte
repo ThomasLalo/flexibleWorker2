@@ -231,9 +231,9 @@
             class:selected={shift === selectedShift}
             aria-pressed={shift === selectedShift}
             onclick={() => selectedShift = shift}>
-            <span>{shift.startTime}:00-{shift.endTime}:00 - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
-            <span>{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
-            {#if shift.canceled}<span>Canceled</span>{/if}
+            <span class="shift-heading">{shift.startTime}:00-{shift.endTime}:00 - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
+            <span class="shift-status">{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
+            {#if shift.canceled}<span class="shift-canceled">Canceled</span>{/if}
           </button>
         {:else}
           <p>No matching shifts on this day.</p>
@@ -463,23 +463,57 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 8px;
-    border: 1px solid #4D148C;
-    border-radius: 4px;
-    background-color: #CCCCCC;
-    color: black;
-    font: inherit;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 56px;
+    padding: 14px 20px;
+    border: 1px solid #dcd5e2;
+    border-radius: 8px;
+    background-color: #f6f3f8;
+    color: #302738;
+    font-family: system-ui, sans-serif;
+    font-size: 1.25rem;
+    line-height: 1.4;
     text-align: left;
+    overflow-wrap: anywhere;
     cursor: pointer;
   }
 
-  .shift-option.claimed {
-    background-color: #FF6600;
+  .shift-heading {
+    font-weight: 600;
+    color: #4D148C;
+  }
+
+  .shift-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #FF6600;
+  }
+
+  .shift-option.claimed .shift-status {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #302738;
+  }
+
+  .shift-canceled {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: red;
+  }
+
+  .shift-option:hover {
+    background-color: #ece3f3;
   }
 
   .shift-option.selected {
-    background-color: #333333;
-    color: white;
+    background-color: #ece3f3;
+    border-color: #4D148C;
+    box-shadow: 0 0 0 1px #4D148C;
+  }
+
+  .shift-option:focus-visible {
     outline: 2px solid #4D148C;
+    outline-offset: 3px;
   }
 </style>
