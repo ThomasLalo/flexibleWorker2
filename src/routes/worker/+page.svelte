@@ -2,6 +2,11 @@
   import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
+  import {addNotification, checkToday} from '#lib/notifications.svelte.ts';
+  import NotificationBox from '#lib/notificationBox.svelte';
+  
+checkToday();
+
   // currently logged in
   let currentWorker = $state("Emma Johnson")
   // takes the worker logged in and changes the doughnut graphs to satisfty that persons infomration
@@ -21,6 +26,13 @@
   function removeShift(shift: Shift){
     delete shift.worker;
     selectedShift = null; 
+  }
+
+  function cancelShift(shift: Shift, address: string) {
+    shift.canceled = true;
+    selectedShift = null;
+    addNotification("manager", `${currentWorker} canceled their ${shift.month}/${shift.day} shift at ${address}`);
+    addNotification("all", `New shift avaliable: ${shift.month}/${shift.day}, ${shift.startTime}:00 - ${shift.endTime}:00 at ${address}`);
   }
 
 </script>
@@ -78,7 +90,7 @@
                 <WarningIcon />
               {/if}
               {#if shift === selectedShift}
-                <button type="button" onclick={(event) => {event.stopPropagation(); shift.canceled = true }}> Remove Shift</button>
+                <button type="button" onclick={(event) => {event.stopPropagation(); cancelShift(shift, location.address); }}> Remove Shift</button>
               {/if}
             </div>
           </div>
@@ -156,6 +168,8 @@
       {/each}
     </select>
   </label>
+
+  <NotificationBox recipient={currentWorker} />
 </main>
 
 <style>
