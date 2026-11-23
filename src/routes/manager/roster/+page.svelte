@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
-  import { locations, roster, type Shift, type Worker } from '#lib/shared.svelte.ts';
+  import { locations, roster, formatTime, type Shift, type Worker } from '#lib/shared.svelte.ts';
 
   // a shift plus the address it belongs to, so the roster can list them per worker
   type AssignedShift = Shift & { address: string };
@@ -30,7 +30,8 @@
       }
     }
     for (const list of map.values()) {
-      list.sort((a, b) => a.month - b.month || a.day - b.day || a.startTime - b.startTime);
+      list.sort((a, b) => a.month - b.month || a.day - b.day ||
+        a.startTime - b.startTime || a.startMinute - b.startMinute);
     }
     return map;
   });
@@ -67,13 +68,6 @@
 
   function toggle(w: Worker) {
     selectedName = selectedName === w.name ? null : w.name;
-  }
-
-  // 9 -> "9 AM", 14 -> "2 PM"
-  function formatHour(h: number) {
-    if (h === 0 || h === 24) return '12 AM';
-    if (h === 12) return '12 PM';
-    return h < 12 ? `${h} AM` : `${h - 12} PM`;
   }
 
   function capitalize(s: string) {
@@ -211,7 +205,7 @@
         {#each selectedShifts as shift}
           <div class={['shift', shift.canceled && 'shift-canceled', shift.timeChanged && 'time-changed']}>
             <span class="shift-date">{shift.month}/{shift.day}</span>
-            <span class="shift-time">{formatHour(shift.startTime)} - {formatHour(shift.endTime)}</span>
+            <span class="shift-time">{formatTime(shift.startTime, shift.startMinute)} - {formatTime(shift.endTime, shift.endMinute)}</span>
             <span class="shift-address">{shift.address}</span>
             {#if shift.canceled}
               <span class="shift-status">Canceled</span>

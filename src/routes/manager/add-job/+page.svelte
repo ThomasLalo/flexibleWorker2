@@ -56,10 +56,10 @@
 
     const times = validateShiftTime(newDate, newStartTime, newEndTime);
     if (!times) {
-      error = "Choose a date and whole-hour times, with the end after the start.";
+      error = "Choose a date and valid times, with the end after the start on the same day.";
       return;
     }
-    const { date, start, end } = times;
+    const { date, start, startMinute, end, endMinute } = times;
     if (newRole !== "handler" && newRole !== "courier") {
       error = "Choose a handler or courier role.";
       return;
@@ -69,7 +69,9 @@
         month: date.getMonth() + 1,
         day: date.getDate(),
         startTime: start,
+        startMinute,
         endTime: end,
+        endMinute,
         role: newRole
       });
     }
@@ -78,7 +80,9 @@
       a.month - b.month ||
       a.day - b.day ||
       a.startTime - b.startTime ||
-      a.endTime - b.endTime
+      a.startMinute - b.startMinute ||
+      a.endTime - b.endTime ||
+      a.endMinute - b.endMinute
     );
     goto(resolve('/manager'));
   }
@@ -95,8 +99,8 @@
     <p>Location: {selectedLocation.address}</p>
     <form class="add-form" onsubmit={addShift}>
       <label>Date <input type="date" bind:value={newDate} required /></label>
-      <label>Start time <input type="time" bind:value={newStartTime} step="3600" required /></label>
-      <label>End time <input type="time" bind:value={newEndTime} step="3600" required /></label>
+      <label>Start time <input type="time" bind:value={newStartTime} step="60" required /></label>
+      <label>End time <input type="time" bind:value={newEndTime} step="60" required /></label>
       <label>Role
         <select bind:value={newRole}>
           <option value="handler">Handler</option>

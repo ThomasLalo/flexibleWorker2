@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
-  import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
+  import {locations, roster, formatTime, type Shift} from '#lib/shared.svelte.ts';
   import {addNotification, checkToday} from '#lib/notifications.svelte.ts';
   import NotificationBox from '#lib/notificationBox.svelte';
   
@@ -32,7 +32,7 @@ checkToday();
     shift.canceled = true;
     selectedShift = null;
     addNotification("manager", `${currentWorker} canceled their ${shift.month}/${shift.day} shift at ${address}`);
-    addNotification("all", `New shift avaliable: ${shift.month}/${shift.day}, ${shift.startTime}:00 - ${shift.endTime}:00 at ${address}`);
+    addNotification("all", `New shift available: ${shift.month}/${shift.day}, ${formatTime(shift.startTime, shift.startMinute)} - ${formatTime(shift.endTime, shift.endMinute)} at ${address}`);
   }
 
 </script>
@@ -74,7 +74,7 @@ checkToday();
 
             <div class="shift-details">
               <span class="shift-date">{shift.month}/{shift.day}</span> 
-              <span class="shift-time">{shift.startTime}:00 - {shift.endTime}:00</span>
+              <span class="shift-time">{formatTime(shift.startTime, shift.startMinute)} - {formatTime(shift.endTime, shift.endMinute)}</span>
 
               {#if shift.canceled}
                 <span class="shift-status">Shift Canceled</span>

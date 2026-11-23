@@ -1,4 +1,4 @@
-import { locations } from '#lib/shared.svelte.ts';
+import { locations, formatTime } from '#lib/shared.svelte.ts';
 
 // share a list of notification that any page can add to
 export type Notice = {
@@ -62,7 +62,7 @@ export function checkToday() {
     for (const location of locations){
         for (const shift of location.shifts) {
             if (shift.worker && !shift.canceled && shift.month === month && shift.day === day){
-                addNotification(shift.worker, `You have a shift today at $[shift.startTime]:00 at ${location.address}`);
+                addNotification(shift.worker, `You have a shift today at ${formatTime(shift.startTime, shift.startMinute)} at ${location.address}`);
             }
         }
     }

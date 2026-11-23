@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-    import type { Shift } from '#lib/shared.svelte.ts';
+    import { formatTime, type Shift } from '#lib/shared.svelte.ts';
     let {
         claimedShifts,
         unclaimedShifts,
@@ -117,7 +117,7 @@ function isInRange(day: number): boolean {
         {#each dayShifts.slice(0, 3) as shift (shift)}
             <span class="shift" class:claimed={Boolean(shift.worker)}
                 class:selected={shift === selectedShift}>
-                {shift.startTime}:00-{shift.endTime-12}:00
+                {formatTime(shift.startTime, shift.startMinute)}–{formatTime(shift.endTime, shift.endMinute)}
             </span>
         {/each}
 

@@ -1,4 +1,6 @@
 <script module lang="ts">
+  import { formatTime, parseTime, timeToMinutes } from '#lib/shared.svelte.ts';
+
   // Helpers used by the -job pages
   export function readJobFilters(params: Pick<URLSearchParams, 'get'>) {
     return {
@@ -12,14 +14,17 @@
 
   export function validateShiftTime(dateValue: string, startTime: string, endTime: string) {
     const date = new Date(dateValue + "T00:00");
-    const start = Number(startTime.split(':')[0]);
-    const end = Number(endTime.split(':')[0]);
+    const start = parseTime(startTime);
+    const end = parseTime(endTime);
     if (!dateValue || Number.isNaN(date.getTime()) ||
-        !/^\d{2}:00$/.test(startTime) || !/^\d{2}:00$/.test(endTime) ||
-        start < 0 || end > 23 || start >= end) {
+        start === null || end === null || start >= end) {
       return null;
     }
-    return { date, start, end };
+    return {
+      date,
+      start: Math.floor(start / 60), startMinute: start % 60,
+      end: Math.floor(end / 60), endMinute: end % 60
+    };
   }
 </script>
 
@@ -100,13 +105,12 @@
   // new Date("" + "T00:00") would cause an error
   const startDate = $derived(sd ? new Date(sd + "T00:00") : null);
   const endDate = $derived(ed ? new Date(ed + "T00:00") : null);
-  // parseInt("") === NaN
-  const startHour = $derived(st ? parseInt(st) : null);
-  const endHour = $derived(et ? parseInt(et) : null);
+  const startMinutes = $derived(parseTime(st));
+  const endMinutes = $derived(parseTime(et));
   const hasFilters = $derived(Boolean(sd || ed || st || et || (!isClaimPage && (roleFilter || unclaimedOnly))));
   const invalidDateRange = $derived(Boolean(sd && ed && sd > ed));
   const invalidTimeRange = $derived(
-    startHour !== null && endHour !== null && startHour > endHour
+    startMinutes !== null && endMinutes !== null && startMinutes > endMinutes
   );
 
   const shiftsInRange: Shift[] = $derived(
@@ -118,8 +122,8 @@
         // if null give true since that part of the filter does not apply
         (!startDate || date >= startDate) &&
         (!endDate || date <= endDate) &&
-        (startHour === null || shift.startTime >= startHour) &&
-        (endHour === null || shift.endTime <= endHour) &&
+        (startMinutes === null || timeToMinutes(shift.startTime, shift.startMinute) >= startMinutes) &&
+        (endMinutes === null || timeToMinutes(shift.endTime, shift.endMinute) <= endMinutes) &&
         (isClaimPage ? shift.role === role : !roleFilter || shift.role === roleFilter) &&
         (isClaimPage || !unclaimedOnly || !shift.worker)
       );
@@ -147,6 +151,7 @@
     const first = selectedShifts[0];
     return first ? shiftsForSelectedDay.filter(shift =>
       shift.startTime === first.startTime && shift.endTime === first.endTime &&
+      shift.startMinute === first.startMinute && shift.endMinute === first.endMinute &&
       shift.role === first.role
     ) : [];
   });
@@ -157,13 +162,9 @@
       : selectedShifts.filter(item => item !== shift);
   }
 
-  function formatTime(time: string) {
-    if (!time) return "";
-
-    const [hours, minutes] = time.split(":");
-    const hour = Number(hours);
-
-    return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? "PM" : "AM"}`;
+  function formatFilterTime(time: string) {
+    const minutes = parseTime(time);
+    return minutes === null ? "" : formatTime(Math.floor(minutes / 60), minutes % 60);
   }
 
   function formatDate(value: string) {
@@ -197,8 +198,8 @@
               {/if}
               {#if dashboardFilters.st || dashboardFilters.et}
                 <span>
-                  {#if dashboardFilters.st}Starting at or after {formatTime(dashboardFilters.st)}{/if}
-                  {#if dashboardFilters.et}{dashboardFilters.st ? 'and ending' : 'Ending'} by {formatTime(dashboardFilters.et)}{/if}
+                  {#if dashboardFilters.st}Starting at or after {formatFilterTime(dashboardFilters.st)}{/if}
+                  {#if dashboardFilters.et}{dashboardFilters.st ? 'and ending' : 'Ending'} by {formatFilterTime(dashboardFilters.et)}{/if}
                 </span>
               {/if}
             </div>
@@ -221,8 +222,8 @@
                 {/if}
                 {#if st || et}
                   <span>
-                    {#if st}Starting at or after {formatTime(st)}{/if}
-                    {#if et}{st ? 'and ending' : 'Ending'} by {formatTime(et)}{/if}
+                    {#if st}Starting at or after {formatFilterTime(st)}{/if}
+                    {#if et}{st ? 'and ending' : 'Ending'} by {formatFilterTime(et)}{/if}
                   </span>
                 {/if}
                 {#if !isClaimPage}
@@ -327,7 +328,7 @@
         {/if}
         {#each shiftsForSelectedDay as shift (shift)}
           {#snippet shiftDetails()}
-            <span class="shift-heading">{formatTime(`${shift.startTime}:00`)}–{formatTime(`${shift.endTime}:00`)} - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
+            <span class="shift-heading">{formatTime(shift.startTime, shift.startMinute)}–{formatTime(shift.endTime, shift.endMinute)} - {shift.role.charAt(0).toUpperCase()+ shift.role.slice(1)}</span>
             <span class="shift-status">{shift.worker ? `Claimed by ${shift.worker}` : 'Available'}</span>
             {#if shift.canceled}<span class="shift-canceled">Canceled</span>{/if}
           {/snippet}
@@ -357,7 +358,7 @@
         {#if selectedShift && !multiple}
           <p>
             Selected: {selectedShift.month}/{selectedShift.day},
-            {selectedShift.startTime}:00-{selectedShift.endTime}:00
+            {formatTime(selectedShift.startTime, selectedShift.startMinute)}–{formatTime(selectedShift.endTime, selectedShift.endMinute)}
           </p>
         {/if}
         {@render children()}

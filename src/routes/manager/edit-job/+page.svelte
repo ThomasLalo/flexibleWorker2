@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { locations } from '#lib/shared.svelte.ts';
+  import { locations, formatTimeInput } from '#lib/shared.svelte.ts';
   import type { Shift } from '#lib/shared.svelte.ts';
   import type { CalendarDay } from '#lib/Calender.svelte';
   import JobShared, { readJobFilters, validateShiftTime } from '#lib/JobShared.svelte';
@@ -26,10 +26,10 @@
     const year = selectedDay?.year ?? calendarDate?.getFullYear() ?? new Date().getFullYear();
     editDate = shifts.every(item => item.month === shift.month && item.day === shift.day)
       ? `${year}-${String(shift.month).padStart(2, '0')}-${String(shift.day).padStart(2, '0')}` : "";
-    editStartTime = shifts.every(item => item.startTime === shift.startTime)
-      ? `${String(shift.startTime).padStart(2, '0')}:00` : "";
-    editEndTime = shifts.every(item => item.endTime === shift.endTime)
-      ? `${String(shift.endTime).padStart(2, '0')}:00` : "";
+    editStartTime = shifts.every(item => item.startTime === shift.startTime && item.startMinute === shift.startMinute)
+      ? formatTimeInput(shift.startTime, shift.startMinute) : "";
+    editEndTime = shifts.every(item => item.endTime === shift.endTime && item.endMinute === shift.endMinute)
+      ? formatTimeInput(shift.endTime, shift.endMinute) : "";
     editRole = shifts.every(item => item.role === shift.role) ? shift.role : "";
   }
 
@@ -87,25 +87,28 @@
       shift,
       times: validateShiftTime(
         editDate || `${year}-${String(shift.month).padStart(2, '0')}-${String(shift.day).padStart(2, '0')}`,
-        editStartTime || `${String(shift.startTime).padStart(2, '0')}:00`,
-        editEndTime || `${String(shift.endTime).padStart(2, '0')}:00`
+        editStartTime || formatTimeInput(shift.startTime, shift.startMinute),
+        editEndTime || formatTimeInput(shift.endTime, shift.endMinute)
       )
     }));
     if (updates.some(update => !update.times)) {
-      error = "Every selected shift must have whole-hour times, with the end after the start. No changes were saved.";
+      error = "Every selected shift must have valid times, with the end after the start on the same day. No changes were saved.";
       return;
     }
 
     for (const { shift, times } of updates) {
       if (!times) continue;
-      const { date, start, end } = times;
+      const { date, start, startMinute, end, endMinute } = times;
       const scheduleChanged = shift.month !== date.getMonth() + 1 ||
-        shift.day !== date.getDate() || shift.startTime !== start || shift.endTime !== end;
+        shift.day !== date.getDate() || shift.startTime !== start || shift.endTime !== end ||
+        shift.startMinute !== startMinute || shift.endMinute !== endMinute;
 
       shift.month = date.getMonth() + 1;
       shift.day = date.getDate();
       shift.startTime = start;
+      shift.startMinute = startMinute;
       shift.endTime = end;
+      shift.endMinute = endMinute;
       if (editRole) shift.role = editRole;
       if (scheduleChanged) shift.timeChanged = true;
     }
@@ -128,8 +131,8 @@
     {/if}
     <form class="edit-form" onsubmit={saveShift}>
       <label>Date <input type="date" bind:value={editDate} required={selectedShifts.length === 1} /></label>
-      <label>Start time <input type="time" bind:value={editStartTime} step="3600" required={selectedShifts.length === 1} /></label>
-      <label>End time <input type="time" bind:value={editEndTime} step="3600" required={selectedShifts.length === 1} /></label>
+      <label>Start time <input type="time" bind:value={editStartTime} step="60" required={selectedShifts.length === 1} /></label>
+      <label>End time <input type="time" bind:value={editEndTime} step="60" required={selectedShifts.length === 1} /></label>
       <label>Role
         <select bind:value={editRole}>
           {#if selectedShifts.length > 1}<option value="">Keep each shift's role</option>{/if}
