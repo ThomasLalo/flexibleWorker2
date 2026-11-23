@@ -61,6 +61,7 @@
   let st = $state("");
   let et = $state("");
   let roleFilter = $state("");
+  let unclaimedOnly = $state(false);
   let dashboardFiltersApplied = $state(false);
   let dialog: HTMLDialogElement;
 
@@ -84,6 +85,7 @@
 
   function clearFilters() {
     sd = ed = st = et = roleFilter = "";
+    unclaimedOnly = false;
     closeDay();
   }
 
@@ -101,7 +103,7 @@
   // parseInt("") === NaN
   const startHour = $derived(st ? parseInt(st) : null);
   const endHour = $derived(et ? parseInt(et) : null);
-  const hasFilters = $derived(Boolean(sd || ed || st || et || (!isClaimPage && roleFilter)));
+  const hasFilters = $derived(Boolean(sd || ed || st || et || (!isClaimPage && (roleFilter || unclaimedOnly))));
   const invalidDateRange = $derived(Boolean(sd && ed && sd > ed));
   const invalidTimeRange = $derived(
     startHour !== null && endHour !== null && startHour > endHour
@@ -118,7 +120,8 @@
         (!endDate || date <= endDate) &&
         (startHour === null || shift.startTime >= startHour) &&
         (endHour === null || shift.endTime <= endHour) &&
-        (isClaimPage ? shift.role === role : !roleFilter || shift.role === roleFilter)
+        (isClaimPage ? shift.role === role : !roleFilter || shift.role === roleFilter) &&
+        (isClaimPage || !unclaimedOnly || !shift.worker)
       );
     }) ?? []
   );
@@ -204,10 +207,10 @@
         {/if}
         <details>
           <summary>
-            <strong>{isClaimPage ? 'Filter by date and time' : 'Filter by date, time, and role'}</strong>
+            <strong>{isClaimPage ? 'Filter by date and time' : 'Filter by date, time, role, and claim status'}</strong>
             <span class="filter-summary">
               {#if !hasFilters}
-                {isClaimPage ? 'All dates and times' : 'All dates, times, and roles'}
+                {isClaimPage ? 'All dates and times' : 'All dates, times, roles, and claim statuses'}
               {:else}
                 {#if !sd && !ed && !st && !et}<span>All dates and times</span>{/if}
                 {#if sd || ed}
@@ -224,6 +227,7 @@
                 {/if}
                 {#if !isClaimPage}
                   <span>{roleFilter ? (roleFilter === 'handler' ? 'Handler' : 'Courier') : 'All roles'}</span>
+                  <span>{unclaimedOnly ? 'Unclaimed only' : 'All claim statuses'}</span>
                 {/if}
                 {#if invalidDateRange || invalidTimeRange}
                   <span class="filter-error">Check the range below.</span>
@@ -268,6 +272,13 @@
                   <option value="">All roles</option>
                   <option value="handler">Handler</option>
                   <option value="courier">Courier</option>
+                </select>
+              </fieldset>
+              <fieldset>
+                <legend>Claim status</legend>
+                <select aria-label="Filter by claim status" bind:value={unclaimedOnly} onchange={closeDay}>
+                  <option value={false}>All shifts</option>
+                  <option value={true}>Unclaimed only</option>
                 </select>
               </fieldset>
             {/if}
