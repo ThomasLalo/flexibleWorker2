@@ -1,8 +1,12 @@
 <script lang="ts">
   import WarningIcon from '#lib/WarningIcon.svelte';
-  import {locations, roster, type Shift} from '#lib/shared.svelte.ts';
+  import {locations, roster, formatTime, parseTime, timeToMinutes, type Shift} from '#lib/shared.svelte.ts';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import NotificationBox from '#lib/notificationBox.svelte';
+  import { checkLate } from '#lib/notifications.svelte.ts';
+  
+  checkLate();
 
   let loc = $state('123 Address Dr.');
   let sd = $state("2026-09-28");
@@ -14,8 +18,8 @@
 
   let startDate = $derived(new Date(sd + "T00:00"));
   let endDate = $derived(new Date(ed + "T00:00"));
-  let startHour = $derived(parseInt(st));
-  let endHour = $derived(parseInt(et));
+  let startMinutes = $derived(parseTime(st));
+  let endMinutes = $derived(parseTime(et));
 
   let shiftsInRange: Shift[] = $derived(
     selectedLocation?.shifts.filter(shift => {
@@ -23,8 +27,8 @@
       return (
         date >= startDate &&
         date <= endDate &&
-        shift.startTime >= startHour &&
-        shift.endTime <= endHour 
+        (startMinutes === null || timeToMinutes(shift.startTime, shift.startMinute) >= startMinutes) &&
+        (endMinutes === null || timeToMinutes(shift.endTime, shift.endMinute) <= endMinutes)
       );
     }) ?? [] //typescript warning avoidance
   );
@@ -105,7 +109,7 @@
           <div class={["shift", !shift.worker && "shift-unclaimed", shift.canceled && "shift-canceled", shift === selectedShift && "selected"]} onclick={() => toggle(shift)}>
             <div class="shift-details">
               <span class="shift-date">{shift.month}/{shift.day}</span>
-              <span class="shift-time">{shift.startTime}:00 a.m. - {shift.endTime-12}:00 p.m.</span>
+              <span class="shift-time">{formatTime(shift.startTime, shift.startMinute)} - {formatTime(shift.endTime, shift.endMinute)}</span>
             </div>
 
 
@@ -161,6 +165,7 @@
     </div>
   </div>
 
+  <NotificationBox recipient = "manager" />
   </main>
  
 

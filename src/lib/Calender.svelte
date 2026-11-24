@@ -3,12 +3,13 @@
 </script>
 
 <script lang="ts">
-    import type { Shift } from '#lib/shared.svelte.ts';
+    import { formatTime, type Shift } from '#lib/shared.svelte.ts';
     let {
         claimedShifts,
         unclaimedShifts,
         startDate = null,
         endDate = null,
+        initialDate = null,
         selectedDay = $bindable(null),
         selectedShift = $bindable(null)
     }: {
@@ -16,6 +17,7 @@
         unclaimedShifts: Shift[];
         startDate?: Date| null;
         endDate?: Date| null;
+        initialDate?: Date | null;
         selectedDay?: CalendarDay | null;
         selectedShift?: Shift | null;
     } = $props();
@@ -26,15 +28,14 @@
     ]);
     
 
-    const initialDate = $derived(startDate ?? new Date());
-
     let year = $state(new Date().getFullYear());
     let month = $state(new Date().getMonth() + 1);
     
     $effect(() => {
-        if (startDate) {
-            year = startDate.getFullYear();
-            month = startDate.getMonth() + 1;
+        const date = startDate ?? endDate ?? initialDate;
+        if (date) {
+            year = date.getFullYear();
+            month = date.getMonth() + 1;
         }
     });
 
@@ -116,7 +117,7 @@ function isInRange(day: number): boolean {
         {#each dayShifts.slice(0, 3) as shift (shift)}
             <span class="shift" class:claimed={Boolean(shift.worker)}
                 class:selected={shift === selectedShift}>
-                {shift.startTime}:00–{shift.endTime}:00
+                {formatTime(shift.startTime, shift.startMinute)}–{formatTime(shift.endTime, shift.endMinute)}
             </span>
         {/each}
 
