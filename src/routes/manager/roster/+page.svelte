@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import { locations, roster, formatTime, type Shift, type Worker } from '#lib/shared.svelte.ts';
@@ -68,6 +69,12 @@
 
   function toggle(w: Worker) {
     selectedName = selectedName === w.name ? null : w.name;
+  }
+
+  // opens the conversation with this worker from the manager's side
+  function messageWorker(w: Worker) {
+    const params = new URLSearchParams({ worker: w.name, view: "manager" });
+    goto(`${resolve('/messages')}?${params}`);
   }
 
   function capitalize(s: string) {
@@ -219,7 +226,7 @@
 
         <div class="detail-actions">
           <button type="button">Assign Shift</button>
-          <button type="button">Message</button>
+          <button type="button" onclick={() => messageWorker(selectedWorker)}>Message</button>
         </div>
       {:else}
         <p class="empty">Select a worker to see their details.</p>
