@@ -206,3 +206,27 @@ export const roster: Worker[] = $state([
   { name: "Lucas Foster", punctuality: 73, attendance: 80, role: "handler",
     email: "lucas.foster@example.com", phone: "(555) 126-9381", certifications: ["Forklift"] },
 ]);
+
+export type Message = {
+  from: "manager" | "worker";
+  text: string;
+  month: number;
+  day: number;
+  time: string;
+};
+
+// messages between the manager and a worker, the key is the worker's name
+// same as above, push to these arrays instead of reassigning them
+export const conversations: Record<string, Message[]> = $state({
+  "Ava Thompson": [
+    { from: "manager", month: 11, day: 20, time: "3:10 PM", text: "Hey Ava, just a heads up your 12/11 shift at 456 Oak St. got canceled. We don't need as many people that morning." },
+    { from: "worker", month: 11, day: 20, time: "3:24 PM", text: "Ok thanks for letting me know. Is there anything else open around then I could pick up?" },
+    { from: "manager", month: 11, day: 20, time: "3:31 PM", text: "There's an early handler shift on 12/12 at Oak St, 6:30am to 2:30pm. Want it?" },
+    { from: "worker", month: 11, day: 20, time: "3:35 PM", text: "Yes I'll take it" },
+    { from: "manager", month: 11, day: 20, time: "3:40 PM", text: "Done, you're on the schedule. Thanks!" },
+    { from: "worker", month: 11, day: 21, time: "6:48 PM", text: "Is my shift on 12/4 at 123 Address Dr. still 12:30 to 8:30?" },
+    { from: "manager", month: 11, day: 21, time: "7:02 PM", text: "Yep no changes, see you then" },
+    { from: "worker", month: 11, day: 22, time: "10:15 AM", text: "Also could I leave a little early on 12/23? It's right before the holidays" },
+    { from: "manager", month: 11, day: 22, time: "10:40 AM", text: "Should be fine, just remind me the week before" },
+  ],
+});
