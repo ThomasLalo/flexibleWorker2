@@ -2,13 +2,14 @@
   import { resolve } from '$app/paths';
   import WarningIcon from '#lib/WarningIcon.svelte';
   import {locations, roster, formatTime, type Shift} from '#lib/shared.svelte.ts';
-  import {addNotification, checkToday} from '#lib/notifications.svelte.ts';
+  import {addNotification, checkUpcoming} from '#lib/notifications.svelte.ts';
   import NotificationBox from '#lib/notificationBox.svelte';
+  import { goto } from '$app/navigation';
   
-checkToday();
+checkUpcoming();
 
   // currently logged in
-  let currentWorker = $state("Emma Johnson")
+  let currentWorker = $state("Ava Thompson")
   // takes the worker logged in and changes the doughnut graphs to satisfty that persons infomration
   let workerInfo = $derived(roster.find(worker => worker.name === currentWorker));
 
@@ -34,6 +35,13 @@ checkToday();
     addNotification("manager", `${currentWorker} canceled their ${shift.month}/${shift.day} shift at ${address}`);
     addNotification("all", `New shift available: ${shift.month}/${shift.day}, ${formatTime(shift.startTime, shift.startMinute)} - ${formatTime(shift.endTime, shift.endMinute)} at ${address}`);
   }
+   
+  // opens messages as current worker
+  function messageManager() {
+    const params = new URLSearchParams({worker: currentWorker, view: 'worker'});
+    goto(`${resolve('/messages')}?${params}`);
+  }
+  
 
 </script>
 
@@ -42,7 +50,8 @@ checkToday();
     <a href={resolve('/')}>&lt;&lt;&lt; Back to login</a>
   </div>
   <h1 class="dashboard-title">Employee Dashboard <hr /></h1>
-
+  <NotificationBox recipient={currentWorker} />
+  <button type="button" class='messageButton' onclick={messageManager}>Message Manager</button>
 
   <div class="dashboard-columns">
     <section class="dashboard-panel">
@@ -113,9 +122,9 @@ checkToday();
 
         <fieldset>
           <legend>Date range</legend>
-          <input type="date" value="2026-09-28" name = "startDate"/>
+          <input type="date" value="2026-12-10" name = "startDate"/>
           -
-          <input type="date" value="2026-09-30" name = "endDate"/>
+          <input type="date" value="2026-12-17" name = "endDate"/>
         </fieldset>
 
         <fieldset>
@@ -169,7 +178,7 @@ checkToday();
     </select>
   </label>
 
-  <NotificationBox recipient={currentWorker} />
+  
 </main>
 
 <style>
@@ -335,6 +344,13 @@ checkToday();
     width: 150px;
     max-width: 100%;
     height: auto;
+  }
+
+  .messageButton {
+    margin: 0 2rem 1rem;
+    padding: 6px 12px;
+    font: inherit;
+    cursor: pointer;
   }
 
 </style>

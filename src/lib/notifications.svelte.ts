@@ -33,7 +33,7 @@ export function removeNotification(id: number) {
     }
 }
  
-// late workers notification for managers
+// late and absent workers notification for managers
 let lateCheck = false;
 
 export function checkLate(){
@@ -45,26 +45,36 @@ export function checkLate(){
             if(shift.worker && shift.late) {
                 addNotification("manager", `${shift.worker} was late to their ${shift.month}/${shift.day} shift at ${location.address}`);
             }
-        }
-    }
-}
-
-let todayChecked = false;
-
-export function checkToday() {
-    if (todayChecked) return; 
-    todayChecked = true;
-
-    const today = new Date()
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-
-    for (const location of locations){
-        for (const shift of location.shifts) {
-            if (shift.worker && !shift.canceled && shift.month === month && shift.day === day){
-                addNotification(shift.worker, `You have a shift today at ${formatTime(shift.startTime, shift.startMinute)} at ${location.address}`);
+            if (shift.worker && shift.absent) {
+                addNotification("manager", `${shift.worker} missed their ${shift.month}/${shift.day} shift at ${location.address}`);     
             }
         }
     }
+}
+   const today = new Date(2026, 11, 10);
 
+   // inform worker about their shift
+   let upcomingChecked = false;
+
+   export function checkUpcoming() {
+    if (upcomingChecked)
+    {
+        return;
+    }
+    upcomingChecked = true;
+
+    const weekAhead = new Date(today);
+    weekAhead.setDate(today.getDate() + 7);
+
+    for (const location of locations) {
+        for (const shift of location.shifts) {
+            const year = shift.month === 1 ? 2027 : 2026;
+            const shiftDate = new Date(year, shift.month -1, shift.day);
+
+            if (shift.worker && !shift.canceled && shiftDate > today && shiftDate <= weekAhead)
+            {
+                addNotification(shift.worker, `Upcoming shift ${shift.month}/${shift.day} at ${formatTime(shift.startTime, shift.startMinute)} at ${location.address}`);
+            }
+        }
+    }
 }

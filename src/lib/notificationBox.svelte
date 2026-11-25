@@ -91,12 +91,9 @@ li{
     flex: 1;
 }
 
-/* @media (max-width: 600px) {
-    .notification-box {
-        margin: 1rem;
-    }
-    li {
-        flex-wrap: wrap;
-    }
-}*/
+button{
+    padding: 6px 12px;
+    font: inherit;
+    cursor: pointer;
+}
 </style>

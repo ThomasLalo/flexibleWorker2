@@ -4,13 +4,13 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import NotificationBox from '#lib/notificationBox.svelte';
-  import { checkLate } from '#lib/notifications.svelte.ts';
+  import { checkLate, addNotification } from '#lib/notifications.svelte.ts';
   
   checkLate();
 
   let loc = $state('123 Address Dr.');
-  let sd = $state("2026-09-28");
-  let ed = $state("2026-09-30");
+  let sd = $state("2026-12-10");
+  let ed = $state("2026-12-17");
   let st = $state('08:00');
   let et = $state('20:00');
 
@@ -54,9 +54,13 @@
     goto(`${resolve('/manager/edit-job')}?${params}`);
   }
 
+  // manager cancels a shift, informs worker
   function removeShift(shift: Shift) {
     shift.canceled = true;
     selectedShift = null;
+    if (shift.worker) {
+      addNotification(shift.worker, `Your ${shift.month}/${shift.day} shift at ${loc} was canceled by your manager`);
+    }
   }
 
   function gotoRoster() {
@@ -66,8 +70,10 @@
 </script>
 
 <main>
-  <h1>Manager Dashboard <hr> </h1>
+  <h1>Manager Dashboard <hr> </h1> 
 
+  <NotificationBox recipient = "manager" />
+  
   <div class="main-layout">
     <div class="location-shifts">
       <div class="filters">
@@ -165,7 +171,7 @@
     </div>
   </div>
 
-  <NotificationBox recipient = "manager" />
+  
   </main>
  
 
